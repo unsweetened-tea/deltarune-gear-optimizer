@@ -4,13 +4,15 @@ import { downloadDataset, readDatasetFile } from "./lib/exportImport"
 import { ImportPanel } from "./components/ImportPanel"
 import { ItemsPanel } from "./components/ItemsPanel"
 import { CharactersPanel } from "./components/CharactersPanel"
+import { OptimizerPanel } from "./components/OptimizerPanel"
 
-type Tab = "import" | "items" | "characters"
+type Tab = "import" | "items" | "characters" | "optimizer"
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "import", label: "Import" },
   { id: "items", label: "Items" },
   { id: "characters", label: "Characters" },
+  { id: "optimizer", label: "Optimizer" },
 ]
 
 function App() {
@@ -90,6 +92,7 @@ function App() {
         {tab === "import" && <ImportPanel />}
         {tab === "items" && <ItemsPanel />}
         {tab === "characters" && <CharactersPanel />}
+        {tab === "optimizer" && <OptimizerPanel />}
       </main>
     </div>
   )
