@@ -23,14 +23,14 @@ export type OptimizeResult =
   | { ok: true; loadouts: ScoredLoadout[] }
   | { ok: false; reason: string }
 
-function canEquip(item: Item, character: Character): boolean {
+export function canEquip(item: Item, character: Character): boolean {
   if (item.excludedFrom.includes(character.id)) return false
   return (
     item.equippableBy === "all" || item.equippableBy.includes(character.id)
   )
 }
 
-function isAvailable(
+export function isAvailable(
   item: Item,
   chaptersEnabled: number[],
   inventoryMode: InventoryMode,
@@ -77,7 +77,7 @@ export function enumerateArmorSelections(
   return results
 }
 
-function totalStats(character: Character, equipped: Item[]): Stats {
+export function totalStats(character: Character, equipped: Item[]): Stats {
   const totals: Stats = { ...character.baseStats }
   for (const item of equipped) {
     totals.hp += item.stats.hp

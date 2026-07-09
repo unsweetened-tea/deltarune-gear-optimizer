@@ -5,14 +5,16 @@ import { ImportPanel } from "./components/ImportPanel"
 import { ItemsPanel } from "./components/ItemsPanel"
 import { CharactersPanel } from "./components/CharactersPanel"
 import { OptimizerPanel } from "./components/OptimizerPanel"
+import { PartyPanel } from "./components/PartyPanel"
 
-type Tab = "import" | "items" | "characters" | "optimizer"
+type Tab = "import" | "items" | "characters" | "optimizer" | "party"
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "import", label: "Import" },
   { id: "items", label: "Items" },
   { id: "characters", label: "Characters" },
   { id: "optimizer", label: "Optimizer" },
+  { id: "party", label: "Party" },
 ]
 
 function App() {
@@ -93,6 +95,7 @@ function App() {
         {tab === "items" && <ItemsPanel />}
         {tab === "characters" && <CharactersPanel />}
         {tab === "optimizer" && <OptimizerPanel />}
+        {tab === "party" && <PartyPanel />}
       </main>
     </div>
   )
