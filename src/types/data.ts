@@ -42,6 +42,19 @@ export interface Character {
 
 export type InventoryMode = "owned" | "unlimited"
 
+export type PresetCategory = "playstyle" | "stat" | "boss"
+
+export type PresetObjective = "weightedSum" | "maximin"
+
+export interface Preset {
+  id: string
+  label: string
+  category: PresetCategory
+  weights: Stats
+  objective: PresetObjective
+  notes?: string
+}
+
 export interface DatasetSettings {
   chaptersEnabled: number[]
   inventoryMode: InventoryMode
@@ -51,5 +64,6 @@ export interface Dataset {
   version: number
   characters: Character[]
   items: Item[]
+  presets: Preset[]
   settings: DatasetSettings
 }

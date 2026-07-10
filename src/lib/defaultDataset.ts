@@ -1,4 +1,5 @@
 import type { Character, Dataset } from "../types/data"
+import { builtinPresets, DATASET_VERSION } from "./presets"
 
 const zeroStats = { hp: 0, atk: 0, def: 0, magic: 0 }
 
@@ -43,9 +44,10 @@ const starterCharacters: Character[] = [
 
 export function createDefaultDataset(): Dataset {
   return {
-    version: 1,
+    version: DATASET_VERSION,
     characters: starterCharacters,
     items: [],
+    presets: builtinPresets(),
     settings: {
       chaptersEnabled: [1, 2, 3, 4, 5],
       inventoryMode: "owned",

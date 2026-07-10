@@ -2,9 +2,12 @@ import type {
   Ability,
   Character,
   Dataset,
+  DatasetSettings,
   Item,
+  Preset,
   Stats,
 } from "../types/data"
+import { DATASET_VERSION, ensureBuiltinPresets } from "./presets"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -64,18 +67,61 @@ function isCharacter(value: unknown): value is Character {
   )
 }
 
-export function isDataset(value: unknown): value is Dataset {
+function isPreset(value: unknown): value is Preset {
   if (!isRecord(value)) return false
   return (
-    typeof value.version === "number" &&
-    Array.isArray(value.characters) &&
-    value.characters.every(isCharacter) &&
-    Array.isArray(value.items) &&
-    value.items.every(isItem) &&
-    isRecord(value.settings) &&
-    Array.isArray(value.settings.chaptersEnabled) &&
-    value.settings.chaptersEnabled.every((c) => typeof c === "number") &&
-    (value.settings.inventoryMode === "owned" ||
-      value.settings.inventoryMode === "unlimited")
+    typeof value.id === "string" &&
+    typeof value.label === "string" &&
+    (value.category === "playstyle" ||
+      value.category === "stat" ||
+      value.category === "boss") &&
+    isStats(value.weights) &&
+    (value.objective === "weightedSum" || value.objective === "maximin") &&
+    (value.notes === undefined || typeof value.notes === "string")
   )
+}
+
+function isSettings(value: unknown): value is DatasetSettings {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.chaptersEnabled) &&
+    value.chaptersEnabled.every((c: unknown) => typeof c === "number") &&
+    (value.inventoryMode === "owned" || value.inventoryMode === "unlimited")
+  )
+}
+
+/**
+ * Structurally validates stored or imported data and returns a
+ * normalized current-version Dataset, or null if the shape is wrong.
+ * Pre-preset (version 1) data is accepted and migrated: missing
+ * `presets` becomes the built-in set, and missing built-ins are
+ * re-added to older exports without touching user presets.
+ */
+export function parseDataset(value: unknown): Dataset | null {
+  if (!isRecord(value)) return null
+  if (typeof value.version !== "number") return null
+  if (!Array.isArray(value.characters) || !value.characters.every(isCharacter))
+    return null
+  if (!Array.isArray(value.items) || !value.items.every(isItem)) return null
+  if (!isSettings(value.settings)) return null
+
+  let presets: Preset[]
+  if (value.presets === undefined) {
+    presets = []
+  } else if (
+    Array.isArray(value.presets) &&
+    value.presets.every(isPreset)
+  ) {
+    presets = value.presets
+  } else {
+    return null
+  }
+
+  return {
+    version: DATASET_VERSION,
+    characters: value.characters,
+    items: value.items,
+    presets: ensureBuiltinPresets(presets),
+    settings: value.settings,
+  }
 }

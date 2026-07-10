@@ -5,21 +5,21 @@ import { ImportPanel } from "./components/ImportPanel"
 import { ItemsPanel } from "./components/ItemsPanel"
 import { CharactersPanel } from "./components/CharactersPanel"
 import { OptimizerPanel } from "./components/OptimizerPanel"
-import { PartyPanel } from "./components/PartyPanel"
+import { OptimizeScreen } from "./components/OptimizeScreen"
 
-type Tab = "import" | "items" | "characters" | "optimizer" | "party"
+type Tab = "optimize" | "solo" | "import" | "items" | "characters"
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: "optimize", label: "Optimize" },
+  { id: "solo", label: "Solo Max" },
   { id: "import", label: "Import" },
   { id: "items", label: "Items" },
   { id: "characters", label: "Characters" },
-  { id: "optimizer", label: "Optimizer" },
-  { id: "party", label: "Party" },
 ]
 
 function App() {
   const { dataset, setDataset } = useDataset()
-  const [tab, setTab] = useState<Tab>("items")
+  const [tab, setTab] = useState<Tab>("optimize")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImportClick = () => {
@@ -91,11 +91,11 @@ function App() {
       </nav>
 
       <main className="mt-6">
+        {tab === "optimize" && <OptimizeScreen />}
+        {tab === "solo" && <OptimizerPanel />}
         {tab === "import" && <ImportPanel />}
         {tab === "items" && <ItemsPanel />}
         {tab === "characters" && <CharactersPanel />}
-        {tab === "optimizer" && <OptimizerPanel />}
-        {tab === "party" && <PartyPanel />}
       </main>
     </div>
   )

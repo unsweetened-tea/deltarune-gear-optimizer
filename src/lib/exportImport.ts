@@ -1,5 +1,5 @@
 import type { Dataset } from "../types/data"
-import { isDataset } from "./validateDataset"
+import { parseDataset } from "./validateDataset"
 
 export function downloadDataset(dataset: Dataset): void {
   const blob = new Blob([JSON.stringify(dataset, null, 2)], {
@@ -20,12 +20,12 @@ export function readDatasetFile(file: File): Promise<Dataset> {
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const parsed: unknown = JSON.parse(reader.result as string)
-        if (!isDataset(parsed)) {
+        const dataset = parseDataset(JSON.parse(reader.result as string))
+        if (dataset === null) {
           reject(new Error("File is not a valid dataset"))
           return
         }
-        resolve(parsed)
+        resolve(dataset)
       } catch {
         reject(new Error("Invalid JSON file"))
       }

@@ -1,6 +1,6 @@
 import type { Dataset } from "../types/data"
 import { createDefaultDataset } from "./defaultDataset"
-import { isDataset } from "./validateDataset"
+import { parseDataset } from "./validateDataset"
 
 const STORAGE_KEY = "deltarune-optimizer:dataset"
 
@@ -9,8 +9,7 @@ export function loadDataset(): Dataset {
   if (!raw) return createDefaultDataset()
 
   try {
-    const parsed: unknown = JSON.parse(raw)
-    return isDataset(parsed) ? parsed : createDefaultDataset()
+    return parseDataset(JSON.parse(raw)) ?? createDefaultDataset()
   } catch {
     return createDefaultDataset()
   }
