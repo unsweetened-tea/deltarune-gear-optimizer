@@ -1,5 +1,6 @@
 import type { Ability, Character, Item, ItemType } from "../types/data"
 import { parseEquippableBy } from "./characterRefs"
+import { parseResistances } from "./resistanceFormat"
 
 const DELIMITERS = ["\t", ",", "|"] as const
 
@@ -47,6 +48,7 @@ export type ColumnField =
   | "magic"
   | "ability"
   | "equippableBy"
+  | "resistances"
 
 export const COLUMN_FIELD_OPTIONS: { value: ColumnField; label: string }[] = [
   { value: "ignore", label: "Ignore" },
@@ -57,6 +59,7 @@ export const COLUMN_FIELD_OPTIONS: { value: ColumnField; label: string }[] = [
   { value: "magic", label: "Magic" },
   { value: "ability", label: "Ability" },
   { value: "equippableBy", label: "Equippable By" },
+  { value: "resistances", label: "Resistances" },
 ]
 
 export function guessColumnField(header: string): ColumnField {
@@ -66,6 +69,7 @@ export function guessColumnField(header: string): ColumnField {
   if (/atk|attack/.test(h)) return "atk"
   if (/def(en[cs]e)?/.test(h)) return "def"
   if (/mag/.test(h)) return "magic"
+  if (/resist|elem/.test(h)) return "resistances"
   if (/abil|effect|skill/.test(h)) return "ability"
   if (/equip|user|character|who/.test(h)) return "equippableBy"
   return "ignore"
@@ -82,6 +86,7 @@ export interface DraftItem {
   magic: number
   abilityName: string
   equippableByText: string
+  resistancesText: string
   skip: boolean
 }
 
@@ -100,6 +105,7 @@ export function buildDraftItems(
   const magicIdx = fields.indexOf("magic")
   const abilityIdx = fields.indexOf("ability")
   const equipIdx = fields.indexOf("equippableBy")
+  const resistIdx = fields.indexOf("resistances")
 
   return dataRows.map((row, i) => ({
     key: i,
@@ -112,6 +118,7 @@ export function buildDraftItems(
     magic: magicIdx >= 0 ? parseStatValue(row[magicIdx] ?? "") : 0,
     abilityName: abilityIdx >= 0 ? (row[abilityIdx] ?? "") : "",
     equippableByText: equipIdx >= 0 ? (row[equipIdx] ?? "") : "all",
+    resistancesText: resistIdx >= 0 ? (row[resistIdx] ?? "") : "",
     skip: false,
   }))
 }
@@ -138,5 +145,7 @@ export function draftToItem(
     ability,
     owned: existing?.owned ?? 0,
     source: existing?.source,
+    resistances:
+      parseResistances(row.resistancesText) ?? existing?.resistances,
   }
 }

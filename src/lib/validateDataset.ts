@@ -1,10 +1,13 @@
 import type {
   Ability,
+  Boss,
+  BossSpecialRule,
   Character,
   Dataset,
   DatasetSettings,
   Item,
   Preset,
+  Resistance,
   Stats,
 } from "../types/data"
 import { DATASET_VERSION, ensureBuiltinPresets } from "./presets"
@@ -35,6 +38,28 @@ function isAbility(value: unknown): value is Ability {
   )
 }
 
+const ELEMENT_VALUES = [
+  "puppetCat",
+  "darkStar",
+  "elecHoly",
+  "deathScythe",
+  "all",
+]
+
+function isResistance(value: unknown): value is Resistance {
+  if (!isRecord(value)) return false
+  if (!ELEMENT_VALUES.includes(value.element as string)) return false
+  if (typeof value.percent !== "number") return false
+  if (value.chapterOverrides !== undefined) {
+    if (!isRecord(value.chapterOverrides)) return false
+    // JSON round-trips numeric keys as strings; accept both.
+    for (const [k, v] of Object.entries(value.chapterOverrides)) {
+      if (!/^\d+$/.test(k) || typeof v !== "number") return false
+    }
+  }
+  return true
+}
+
 function isItem(value: unknown): value is Item {
   if (!isRecord(value)) return false
   return (
@@ -48,7 +73,41 @@ function isItem(value: unknown): value is Item {
     isStringArray(value.excludedFrom) &&
     (value.ability === undefined || isAbility(value.ability)) &&
     typeof value.owned === "number" &&
-    (value.source === undefined || typeof value.source === "string")
+    (value.source === undefined || typeof value.source === "string") &&
+    (value.resistances === undefined ||
+      (Array.isArray(value.resistances) &&
+        value.resistances.every(isResistance)))
+  )
+}
+
+function isSpecialRule(value: unknown): value is BossSpecialRule {
+  if (!isRecord(value)) return false
+  return (
+    typeof value.itemName === "string" &&
+    (value.requiredCharacterId === undefined ||
+      typeof value.requiredCharacterId === "string") &&
+    typeof value.flatReduction === "number"
+  )
+}
+
+function isBoss(value: unknown): value is Boss {
+  if (!isRecord(value)) return false
+  if (typeof value.id !== "string" || typeof value.name !== "string")
+    return false
+  if (typeof value.chapter !== "number") return false
+  if (!isRecord(value.damageProfile)) return false
+  for (const [k, v] of Object.entries(value.damageProfile)) {
+    if (!ELEMENT_VALUES.includes(k) && k !== "neutral") return false
+    if (typeof v !== "number") return false
+  }
+  return (
+    (value.winCondition === "fight" ||
+      value.winCondition === "spare" ||
+      value.winCondition === "special") &&
+    (value.specialRules === undefined ||
+      (Array.isArray(value.specialRules) &&
+        value.specialRules.every(isSpecialRule))) &&
+    (value.notes === undefined || typeof value.notes === "string")
   )
 }
 
@@ -93,9 +152,9 @@ function isSettings(value: unknown): value is DatasetSettings {
 /**
  * Structurally validates stored or imported data and returns a
  * normalized current-version Dataset, or null if the shape is wrong.
- * Pre-preset (version 1) data is accepted and migrated: missing
- * `presets` becomes the built-in set, and missing built-ins are
- * re-added to older exports without touching user presets.
+ * Older versions are accepted and migrated: missing `presets` (v1)
+ * becomes the built-in set (missing built-ins are re-added without
+ * touching user presets), and missing `bosses` (v1/v2) becomes [].
  */
 export function parseDataset(value: unknown): Dataset | null {
   if (!isRecord(value)) return null
@@ -117,11 +176,21 @@ export function parseDataset(value: unknown): Dataset | null {
     return null
   }
 
+  let bosses: Boss[]
+  if (value.bosses === undefined) {
+    bosses = []
+  } else if (Array.isArray(value.bosses) && value.bosses.every(isBoss)) {
+    bosses = value.bosses
+  } else {
+    return null
+  }
+
   return {
     version: DATASET_VERSION,
     characters: value.characters,
     items: value.items,
     presets: ensureBuiltinPresets(presets),
+    bosses,
     settings: value.settings,
   }
 }

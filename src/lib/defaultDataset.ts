@@ -48,6 +48,7 @@ export function createDefaultDataset(): Dataset {
     characters: starterCharacters,
     items: [],
     presets: builtinPresets(),
+    bosses: [],
     settings: {
       chaptersEnabled: [1, 2, 3, 4, 5],
       inventoryMode: "owned",

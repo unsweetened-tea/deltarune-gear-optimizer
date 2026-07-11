@@ -3,7 +3,6 @@ import type {
   Character,
   InventoryMode,
   Item,
-  Preset,
   PresetCategory,
   PresetObjective,
   Stats,
@@ -11,8 +10,8 @@ import type {
 import { useDataset } from "../hooks/useDataset"
 import { optimizeParty } from "../lib/partyOptimizer"
 import { toPartyObjective } from "../lib/presets"
-import { slugify, uniqueSlug } from "../lib/slug"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
+import { BossPanel } from "./BossPanel"
 import { SoulHeart } from "./SoulHeart"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
@@ -80,8 +79,9 @@ export function OptimizeScreen() {
   })
 
   // Auto-runs on every relevant change; the search space is tiny.
+  // The boss tab has its own scoring (BossPanel) — skip the preset engine there.
   const result =
-    preset && party.length > 0
+    category !== "boss" && preset && party.length > 0
       ? optimizeParty({
           party,
           items: dataset.items,
@@ -191,39 +191,28 @@ export function OptimizeScreen() {
         ))}
       </nav>
 
-      {category === "boss" && (
-        <p className="text-small text-text-muted">
-          Boss presets are saved stat-weight presets you define yourself —
-          they are not combat simulations. Encode what you think a fight
-          demands.
-        </p>
+      {category !== "boss" && (
+        <div className="flex flex-wrap gap-2">
+          {categoryPresets.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => selectPreset(p.id)}
+              className={
+                "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-small font-medium " +
+                (preset?.id === p.id
+                  ? "border-soul bg-soul text-on-soul"
+                  : "border-border text-text-muted hover:border-soul hover:text-on-void")
+              }
+            >
+              {preset?.id === p.id && <SoulHeart className="h-2.5 w-2.5" />}
+              {p.label}
+            </button>
+          ))}
+        </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {categoryPresets.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => selectPreset(p.id)}
-            className={
-              "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-small font-medium " +
-              (preset?.id === p.id
-                ? "border-soul bg-soul text-on-soul"
-                : "border-border text-text-muted hover:border-soul hover:text-on-void")
-            }
-          >
-            {preset?.id === p.id && <SoulHeart className="h-2.5 w-2.5" />}
-            {p.label}
-          </button>
-        ))}
-        {category === "boss" && categoryPresets.length === 0 && (
-          <p className="text-small text-text-muted">
-            No boss presets yet — add one below.
-          </p>
-        )}
-      </div>
-
-      {preset && (
+      {category !== "boss" && preset && (
         <div className="rounded-card border border-border bg-surface p-3 text-small text-on-surface">
           <span className="font-display text-h2">{preset.label}</span>
           <span className="ml-3">
@@ -237,8 +226,6 @@ export function OptimizeScreen() {
           )}
         </div>
       )}
-
-      {category === "boss" && <BossEditor selectPreset={selectPreset} />}
 
       <div className="flex flex-wrap items-center gap-4 text-small">
         <fieldset className="flex items-center gap-2">
@@ -306,7 +293,9 @@ export function OptimizeScreen() {
         </div>
       )}
 
-      {dataset.items.length === 0 ? (
+      {category === "boss" ? (
+        <BossPanel />
+      ) : dataset.items.length === 0 ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           No items in your dataset yet. Paste gear tables in the{" "}
           <span className="font-medium text-on-surface">Import</span> tab (or
@@ -529,179 +518,3 @@ export function OptimizeScreen() {
   )
 }
 
-function BossEditor({
-  selectPreset,
-}: {
-  selectPreset: (id: string) => void
-}) {
-  const { dataset, setDataset } = useDataset()
-  const [label, setLabel] = useState("")
-  const [weights, setWeights] = useState<Stats>({
-    hp: 0,
-    atk: 0,
-    def: 1,
-    magic: 0,
-  })
-  const [objective, setObjective] = useState<PresetObjective>("maximin")
-  const [notes, setNotes] = useState("")
-
-  const bosses = dataset.presets.filter((p) => p.category === "boss")
-
-  function updatePreset(id: string, patch: Partial<Preset>) {
-    setDataset((prev) => ({
-      ...prev,
-      presets: prev.presets.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-    }))
-  }
-
-  function deletePreset(id: string) {
-    setDataset((prev) => ({
-      ...prev,
-      presets: prev.presets.filter((p) => p.id !== id),
-    }))
-  }
-
-  function addBoss() {
-    const trimmed = label.trim()
-    if (!trimmed) return
-    const id = uniqueSlug(
-      `boss-${slugify(trimmed)}`,
-      new Set(dataset.presets.map((p) => p.id)),
-    )
-    const boss: Preset = {
-      id,
-      label: trimmed,
-      category: "boss",
-      weights: { ...weights },
-      objective,
-      notes: notes.trim() || undefined,
-    }
-    setDataset((prev) => ({ ...prev, presets: [...prev.presets, boss] }))
-    setLabel("")
-    setNotes("")
-    selectPreset(id)
-  }
-
-  const inputClass =
-    "rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
-
-  return (
-    <div className="space-y-3">
-      {bosses.map((boss) => (
-        <div
-          key={boss.id}
-          className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-2 text-small text-on-surface"
-        >
-          <input
-            value={boss.label}
-            onChange={(e) => updatePreset(boss.id, { label: e.target.value })}
-            className={`w-32 ${inputClass}`}
-            aria-label="Boss name"
-          />
-          {STAT_KEYS.map((stat) => (
-            <label
-              key={stat}
-              className={`flex items-center gap-1 text-small ${STAT_TEXT_CLASS[stat]}`}
-            >
-              {stat.toUpperCase()}
-              <input
-                type="number"
-                step="any"
-                value={boss.weights[stat]}
-                onChange={(e) =>
-                  updatePreset(boss.id, {
-                    weights: {
-                      ...boss.weights,
-                      [stat]:
-                        e.target.value === "" ? 0 : Number(e.target.value),
-                    },
-                  })
-                }
-                className={`w-14 font-mono ${inputClass}`}
-              />
-            </label>
-          ))}
-          <select
-            value={boss.objective}
-            onChange={(e) =>
-              updatePreset(boss.id, {
-                objective: e.target.value as PresetObjective,
-              })
-            }
-            className={inputClass}
-          >
-            <option value="weightedSum">Weighted sum</option>
-            <option value="maximin">Maximin</option>
-          </select>
-          <input
-            value={boss.notes ?? ""}
-            onChange={(e) =>
-              updatePreset(boss.id, { notes: e.target.value || undefined })
-            }
-            placeholder="Notes"
-            className={`min-w-40 flex-1 ${inputClass}`}
-            aria-label="Boss notes"
-          />
-          <button
-            type="button"
-            onClick={() => deletePreset(boss.id)}
-            className="rounded border border-soul/60 px-2 py-1 text-small text-soul hover:bg-soul/10"
-          >
-            Delete
-          </button>
-        </div>
-      ))}
-
-      <div className="flex flex-wrap items-center gap-2 rounded-card border border-dashed border-border p-2 text-small text-on-void">
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="Boss name"
-          className={`w-32 ${inputClass}`}
-        />
-        {STAT_KEYS.map((stat) => (
-          <label
-            key={stat}
-            className={`flex items-center gap-1 text-small ${STAT_TEXT_CLASS[stat]}`}
-          >
-            {stat.toUpperCase()}
-            <input
-              type="number"
-              step="any"
-              value={weights[stat]}
-              onChange={(e) =>
-                setWeights((prev) => ({
-                  ...prev,
-                  [stat]: e.target.value === "" ? 0 : Number(e.target.value),
-                }))
-              }
-              className={`w-14 font-mono ${inputClass}`}
-            />
-          </label>
-        ))}
-        <select
-          value={objective}
-          onChange={(e) => setObjective(e.target.value as PresetObjective)}
-          className={inputClass}
-        >
-          <option value="weightedSum">Weighted sum</option>
-          <option value="maximin">Maximin</option>
-        </select>
-        <input
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notes (what does this fight demand?)"
-          className={`min-w-40 flex-1 ${inputClass}`}
-        />
-        <button
-          type="button"
-          onClick={addBoss}
-          disabled={!label.trim()}
-          className="rounded bg-soul px-3 py-1 text-small font-medium text-on-soul hover:bg-soul/90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Add boss
-        </button>
-      </div>
-    </div>
-  )
-}

@@ -12,6 +12,20 @@ export interface Ability {
 
 export type ItemType = "weapon" | "armor"
 
+export type Element =
+  | "puppetCat"
+  | "darkStar"
+  | "elecHoly"
+  | "deathScythe"
+  | "all"
+
+export interface Resistance {
+  element: Element
+  percent: number
+  /** Chapter-dependent values, keyed by the boss's chapter (e.g. Mannequin: 35, but { 5: 20 }). */
+  chapterOverrides?: Record<number, number>
+}
+
 export interface Item {
   id: string
   name: string
@@ -23,6 +37,7 @@ export interface Item {
   ability?: Ability
   owned: number
   source?: string
+  resistances?: Resistance[]
 }
 
 export interface CharacterSlots {
@@ -60,10 +75,32 @@ export interface DatasetSettings {
   inventoryMode: InventoryMode
 }
 
+export type WinCondition = "fight" | "spare" | "special"
+
+/** An attack that bypasses the element system: a named item grants a flat reduction, optionally only on one character. */
+export interface BossSpecialRule {
+  itemName: string
+  requiredCharacterId?: string
+  /** Fraction of damage removed, 0–1 (e.g. 0.5 = halves damage). */
+  flatReduction: number
+}
+
+export interface Boss {
+  id: string
+  name: string
+  chapter: number
+  /** Share of the boss's incoming damage carried by each element; "neutral" is unresisted. Should sum to ~1. */
+  damageProfile: Partial<Record<Element | "neutral", number>>
+  winCondition: WinCondition
+  specialRules?: BossSpecialRule[]
+  notes?: string
+}
+
 export interface Dataset {
   version: number
   characters: Character[]
   items: Item[]
   presets: Preset[]
+  bosses: Boss[]
   settings: DatasetSettings
 }

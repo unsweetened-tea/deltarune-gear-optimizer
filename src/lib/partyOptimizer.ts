@@ -97,7 +97,7 @@ export function enumerateMemberLoadouts(
   return loadouts
 }
 
-function loadoutUsage(loadout: MemberLoadout): Map<string, number> {
+export function loadoutUsage(loadout: MemberLoadout): Map<string, number> {
   const usage = new Map<string, number>()
   usage.set(loadout.weapon.id, 1)
   for (const a of loadout.armor) {
@@ -113,13 +113,13 @@ function fits(usage: Map<string, number>, inventory: Map<string, number>): boole
   return true
 }
 
-interface SearchMember {
+export interface SearchMember {
   character: Character
   loadouts: MemberLoadout[]
   usages: Map<string, number>[]
 }
 
-interface SearchSolution {
+export interface SearchSolution {
   picks: number[]
   score: number
 }
@@ -134,7 +134,7 @@ interface SearchSolution {
  * so once a loadout's optimistic bound cannot beat the incumbent, no
  * later loadout for that member can either and the branch breaks.
  */
-function solvePool(
+export function solvePool(
   members: SearchMember[],
   objective: PartyObjective,
   inventory: Map<string, number>,

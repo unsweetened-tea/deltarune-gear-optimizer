@@ -8,6 +8,7 @@ import {
   parseEquippableBy,
   parseIdList,
 } from "../lib/characterRefs"
+import { formatResistances, parseResistances } from "../lib/resistanceFormat"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -156,6 +157,7 @@ export function ItemsPanel() {
               <th className="p-2 text-left text-stat-magic">Magic</th>
               <th className="p-2 text-left">Equippable By</th>
               <th className="p-2 text-left">Excluded From</th>
+              <th className="p-2 text-left">Resistances</th>
               <th className="p-2 text-left">Ability Name</th>
               <th className="p-2 text-left">Ability Desc.</th>
               <th className="p-2 text-left">Owned</th>
@@ -262,6 +264,19 @@ export function ItemsPanel() {
                       })
                     }
                     className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
+                  />
+                </td>
+                <td className="p-1">
+                  <input
+                    key={`${item.id}-resists`}
+                    defaultValue={formatResistances(item.resistances)}
+                    onBlur={(e) =>
+                      updateItem(item.id, {
+                        resistances: parseResistances(e.target.value),
+                      })
+                    }
+                    placeholder="puppet 35 ch5:20"
+                    className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                   />
                 </td>
                 <td className="p-1">

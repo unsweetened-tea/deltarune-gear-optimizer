@@ -292,6 +292,7 @@ export function ImportPanel() {
                     <th className="p-2 text-left text-stat-magic">Magic</th>
                     <th className="p-2 text-left">Ability</th>
                     <th className="p-2 text-left">Equippable By</th>
+                    <th className="p-2 text-left">Resists</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -394,6 +395,18 @@ export function ImportPanel() {
                           }
                           placeholder="all"
                           className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
+                        />
+                      </td>
+                      <td className="p-1">
+                        <input
+                          value={row.resistancesText}
+                          onChange={(e) =>
+                            updateDraftRow(i, {
+                              resistancesText: e.target.value,
+                            })
+                          }
+                          placeholder="puppet 35 ch5:20"
+                          className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                         />
                       </td>
                     </tr>

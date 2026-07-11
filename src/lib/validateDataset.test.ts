@@ -77,6 +77,34 @@ describe("parseDataset migration", () => {
     expect(balanced?.[0].weights.hp).toBe(9)
   })
 
+  it("migrates v1/v2 data without bosses to an empty boss list", () => {
+    const result = parseDataset(v1Dataset)
+    expect(result?.bosses).toEqual([])
+  })
+
+  it("preserves valid bosses and rejects malformed ones", () => {
+    const boss = {
+      id: "pink",
+      name: "Pink",
+      chapter: 3,
+      damageProfile: { puppetCat: 0.7, neutral: 0.3 },
+      winCondition: "fight",
+      specialRules: [{ itemName: "Shadow Mantle", flatReduction: 0.5 }],
+    }
+    expect(parseDataset({ ...v1Dataset, bosses: [boss] })?.bosses).toEqual([
+      boss,
+    ])
+    expect(
+      parseDataset({ ...v1Dataset, bosses: [{ id: "broken" }] }),
+    ).toBeNull()
+    expect(
+      parseDataset({
+        ...v1Dataset,
+        bosses: [{ ...boss, damageProfile: { fire: 1 } }],
+      }),
+    ).toBeNull()
+  })
+
   it("rejects malformed presets", () => {
     expect(
       parseDataset({ ...v1Dataset, presets: [{ id: "x" }] }),
