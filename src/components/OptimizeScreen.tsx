@@ -12,6 +12,8 @@ import { useDataset } from "../hooks/useDataset"
 import { optimizeParty } from "../lib/partyOptimizer"
 import { toPartyObjective } from "../lib/presets"
 import { slugify, uniqueSlug } from "../lib/slug"
+import { STAT_TEXT_CLASS } from "../lib/statColors"
+import { SoulHeart } from "./SoulHeart"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -27,12 +29,20 @@ interface UnavailableEntry {
   previousOwned: number
 }
 
-function weightsLabel(weights: Stats): string {
-  return STAT_KEYS.map((s) => `${s.toUpperCase()} ${weights[s]}`).join(" · ")
-}
-
 function objectiveLabel(objective: PresetObjective): string {
   return objective === "weightedSum" ? "Weighted sum" : "Maximin"
+}
+
+function WeightChips({ weights }: { weights: Stats }) {
+  return (
+    <span className="inline-flex gap-2">
+      {STAT_KEYS.map((s) => (
+        <span key={s} className={`${STAT_TEXT_CLASS[s]} font-mono text-mono`}>
+          {s.toUpperCase()} {weights[s]}
+        </span>
+      ))}
+    </span>
+  )
 }
 
 export function OptimizeScreen() {
@@ -162,26 +172,27 @@ export function OptimizeScreen() {
 
   return (
     <div className="space-y-6">
-      <nav className="flex gap-1 border-b border-gray-200">
+      <nav className="flex gap-1 border-b border-border">
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => selectCategory(c.id)}
             className={
-              "px-4 py-2 text-sm font-medium " +
+              "flex items-center gap-1.5 px-4 py-2 text-small font-medium " +
               (category === c.id
-                ? "border-b-2 border-purple-600 text-purple-600"
-                : "text-gray-500 hover:text-gray-700")
+                ? "border-b-2 border-soul text-soul"
+                : "text-text-muted hover:text-on-void")
             }
           >
+            {category === c.id && <SoulHeart className="h-2.5 w-2.5" />}
             {c.label}
           </button>
         ))}
       </nav>
 
       {category === "boss" && (
-        <p className="text-xs text-gray-500">
+        <p className="text-small text-text-muted">
           Boss presets are saved stat-weight presets you define yourself —
           they are not combat simulations. Encode what you think a fight
           demands.
@@ -195,43 +206,44 @@ export function OptimizeScreen() {
             type="button"
             onClick={() => selectPreset(p.id)}
             className={
-              "rounded-full border px-4 py-1.5 text-sm font-medium " +
+              "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-small font-medium " +
               (preset?.id === p.id
-                ? "border-purple-600 bg-purple-600 text-white"
-                : "border-gray-300 text-gray-700 hover:border-purple-400")
+                ? "border-soul bg-soul text-on-soul"
+                : "border-border text-text-muted hover:border-soul hover:text-on-void")
             }
           >
+            {preset?.id === p.id && <SoulHeart className="h-2.5 w-2.5" />}
             {p.label}
           </button>
         ))}
         {category === "boss" && categoryPresets.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <p className="text-small text-text-muted">
             No boss presets yet — add one below.
           </p>
         )}
       </div>
 
       {preset && (
-        <div className="rounded border border-gray-200 bg-gray-50 p-3 text-sm">
-          <span className="font-semibold">{preset.label}</span>
-          <span className="ml-3 text-gray-600">
-            {weightsLabel(preset.weights)}
+        <div className="rounded-card border border-border bg-surface p-3 text-small text-on-surface">
+          <span className="font-display text-h2">{preset.label}</span>
+          <span className="ml-3">
+            <WeightChips weights={preset.weights} />
           </span>
-          <span className="ml-3 rounded bg-gray-200 px-2 py-0.5 text-xs font-medium">
+          <span className="ml-3 rounded bg-surface-2 px-2 py-0.5 text-mono font-mono text-on-surface-2">
             {objectiveLabel(preset.objective)}
           </span>
           {preset.notes && (
-            <p className="mt-1 text-xs text-gray-600">{preset.notes}</p>
+            <p className="mt-1 text-small text-text-muted">{preset.notes}</p>
           )}
         </div>
       )}
 
       {category === "boss" && <BossEditor selectPreset={selectPreset} />}
 
-      <div className="flex flex-wrap items-center gap-4 text-sm">
+      <div className="flex flex-wrap items-center gap-4 text-small">
         <fieldset className="flex items-center gap-2">
           <legend className="sr-only">Party members</legend>
-          Party
+          <span className="text-text-muted">Party</span>
           {dataset.characters.map((c) => (
             <label key={c.id} className="flex items-center gap-1">
               <input
@@ -246,9 +258,9 @@ export function OptimizeScreen() {
 
         <fieldset className="flex items-center gap-2">
           <legend className="sr-only">Chapters</legend>
-          Chapters
+          <span className="text-text-muted">Chapters</span>
           {[1, 2, 3, 4, 5].map((c) => (
-            <label key={c} className="flex items-center gap-1">
+            <label key={c} className="flex items-center gap-1 font-mono">
               <input
                 type="checkbox"
                 checked={chaptersEnabled.includes(c)}
@@ -260,11 +272,11 @@ export function OptimizeScreen() {
         </fieldset>
 
         <label className="flex items-center gap-2">
-          Inventory
+          <span className="text-text-muted">Inventory</span>
           <select
             value={inventoryMode}
             onChange={(e) => setInventoryMode(e.target.value as InventoryMode)}
-            className="rounded border border-gray-300 px-2 py-1"
+            className="rounded border border-border bg-void px-2 py-1 text-on-void"
           >
             <option value="owned">Owned only</option>
             <option value="unlimited">Unlimited</option>
@@ -273,8 +285,8 @@ export function OptimizeScreen() {
       </div>
 
       {recentlyUnavailable.length > 0 && (
-        <div className="rounded border border-blue-300 bg-blue-50 p-3 text-sm">
-          <h3 className="text-xs font-semibold uppercase text-blue-800">
+        <div className="rounded-card border border-border bg-surface-2 p-3 text-small text-on-surface-2">
+          <h3 className="text-small font-semibold text-text-muted uppercase">
             Recently marked unavailable (owned set to 0)
           </h3>
           <ul className="mt-1 space-y-1">
@@ -284,7 +296,7 @@ export function OptimizeScreen() {
                 <button
                   type="button"
                   onClick={() => undoUnavailable(entry)}
-                  className="rounded border border-blue-400 px-2 py-0.5 text-xs text-blue-700 hover:bg-blue-100"
+                  className="rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:border-soul hover:text-soul"
                 >
                   Undo
                 </button>
@@ -295,36 +307,41 @@ export function OptimizeScreen() {
       )}
 
       {dataset.items.length === 0 ? (
-        <p className="rounded border border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600">
+        <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           No items in your dataset yet. Paste gear tables in the{" "}
-          <span className="font-medium">Import</span> tab (or add items by
-          hand in <span className="font-medium">Items</span>) and results
-          will appear here automatically.
+          <span className="font-medium text-on-surface">Import</span> tab (or
+          add items by hand in{" "}
+          <span className="font-medium text-on-surface">Items</span>) and
+          results will appear here automatically.
         </p>
       ) : party.length === 0 ? (
-        <p className="rounded border border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600">
+        <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           No active party members — check at least one character above.
         </p>
       ) : !preset ? (
-        <p className="rounded border border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600">
+        <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           Select or create a preset to see results.
         </p>
       ) : result && !result.ok ? (
-        <p className="rounded border border-amber-400 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
+          <span className="font-semibold text-warning">Can’t optimize: </span>
           {result.reason}
         </p>
       ) : result?.ok ? (
         <>
-          <div className="rounded border border-purple-300 bg-purple-50 p-4 text-sm">
-            <span className="font-semibold text-purple-800">
-              {preset.label} · {objectiveLabel(preset.objective)} ·{" "}
+          <div className="rounded-card border border-soul/40 bg-surface p-4 text-small text-on-surface">
+            <span className="font-display text-h2 text-soul">
+              {preset.label}
+            </span>
+            <span className="ml-3 text-text-muted">
+              {objectiveLabel(preset.objective)} ·{" "}
               {inventoryMode === "owned" ? "Owned pool (shared)" : "Unlimited"}
             </span>
-            <span className="ml-3 text-lg font-bold text-purple-800">
+            <span className="ml-3 font-mono text-h2 font-bold">
               {result.objectiveScore}
             </span>
             {preset.objective === "maximin" && (
-              <span className="ml-2 text-purple-700">
+              <span className="ml-2 text-text-muted">
                 (weakest member:{" "}
                 {
                   result.assignments.reduce((min, a) =>
@@ -336,10 +353,12 @@ export function OptimizeScreen() {
             )}
           </div>
 
-          <p className="text-xs text-gray-500">
-            <span className="font-medium">Remove</span> empties that slot for
-            this build only (resets when you switch preset).{" "}
-            <span className="font-medium">I don&apos;t have this</span>{" "}
+          <p className="text-small text-text-muted">
+            <span className="font-medium text-on-void">Remove</span> empties
+            that slot for this build only (resets when you switch preset).{" "}
+            <span className="font-medium text-on-void">
+              I don&apos;t have this
+            </span>{" "}
             permanently sets the item&apos;s owned count to 0 in your dataset
             — undo above if misclicked.
           </p>
@@ -348,8 +367,7 @@ export function OptimizeScreen() {
             {result.assignments.map((a) => {
               const original = datasetCharacter(a.character.id)
               const locked = locks[a.character.id] ?? 0
-              const remainingSlots =
-                (original?.slots.armor ?? 2) - locked
+              const remainingSlots = (original?.slots.armor ?? 2) - locked
               const lastArmorProtected =
                 original !== undefined &&
                 !original.armorRemovable &&
@@ -357,35 +375,36 @@ export function OptimizeScreen() {
               return (
                 <div
                   key={a.character.id}
-                  className="rounded border border-gray-200 p-4"
+                  className="rounded-card border border-border bg-surface p-4 text-on-surface"
                 >
                   <div className="flex items-baseline justify-between">
-                    <h3 className="text-sm font-semibold">
+                    <h3 className="font-display text-h2">
                       {a.character.name}
                     </h3>
-                    <span className="text-xs text-gray-500">
-                      weighted score {a.score}
+                    <span className="text-small text-text-muted">
+                      weighted score{" "}
+                      <span className="font-mono text-mono">{a.score}</span>
                     </span>
                   </div>
 
-                  <ul className="mt-2 space-y-1 text-sm">
+                  <ul className="mt-2 space-y-1 text-small">
                     <li className="flex items-center gap-2">
                       <span>
-                        <span className="font-medium">Weapon:</span>{" "}
+                        <span className="text-text-muted">Weapon:</span>{" "}
                         {a.weapon.name}
                       </span>
                       <button
                         type="button"
                         disabled
                         title="A weapon slot can never be empty."
-                        className="cursor-not-allowed rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-300"
+                        className="cursor-not-allowed rounded border border-border px-2 py-0.5 text-small text-text-muted opacity-40"
                       >
                         Remove
                       </button>
                       <button
                         type="button"
                         onClick={() => markUnavailable(a.weapon)}
-                        className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+                        className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
                       >
                         I don&apos;t have this
                       </button>
@@ -393,7 +412,7 @@ export function OptimizeScreen() {
                     {a.armor.map((piece, i) => (
                       <li key={i} className="flex items-center gap-2">
                         <span>
-                          <span className="font-medium">Armor:</span>{" "}
+                          <span className="text-text-muted">Armor:</span>{" "}
                           {piece.name}
                         </span>
                         <button
@@ -407,8 +426,8 @@ export function OptimizeScreen() {
                           onClick={() => lockSlot(a.character.id)}
                           className={
                             lastArmorProtected
-                              ? "cursor-not-allowed rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-300"
-                              : "rounded border border-gray-400 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100"
+                              ? "cursor-not-allowed rounded border border-border px-2 py-0.5 text-small text-text-muted opacity-40"
+                              : "rounded border border-border px-2 py-0.5 text-small text-on-surface hover:bg-surface-2"
                           }
                         >
                           Remove
@@ -416,16 +435,15 @@ export function OptimizeScreen() {
                         <button
                           type="button"
                           onClick={() => markUnavailable(piece)}
-                          className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+                          className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
                         >
                           I don&apos;t have this
                         </button>
                       </li>
                     ))}
                     {Array.from({ length: locked }, (_, i) => (
-                      <li key={`locked-${i}`} className="text-gray-400">
-                        <span className="font-medium">Armor:</span> (locked
-                        empty)
+                      <li key={`locked-${i}`} className="text-text-muted">
+                        <span>Armor:</span> (locked empty)
                       </li>
                     ))}
                   </ul>
@@ -434,7 +452,7 @@ export function OptimizeScreen() {
                     <button
                       type="button"
                       onClick={() => resetLocks(a.character.id)}
-                      className="mt-2 rounded border border-gray-400 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100"
+                      className="mt-2 rounded border border-border px-2 py-0.5 text-small text-on-surface hover:bg-surface-2"
                     >
                       Unlock {locked} slot(s)
                     </button>
@@ -444,12 +462,16 @@ export function OptimizeScreen() {
                     {STAT_KEYS.map((stat) => (
                       <div
                         key={stat}
-                        className="rounded bg-gray-100 px-2 py-1 text-center"
+                        className="rounded bg-surface-2 px-2 py-1 text-center text-on-surface-2"
                       >
-                        <div className="text-[10px] font-medium uppercase text-gray-500">
+                        <div
+                          className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
+                        >
                           {stat}
                         </div>
-                        <div className="text-sm font-bold">
+                        <div
+                          className={`font-mono text-mono font-bold ${STAT_TEXT_CLASS[stat]}`}
+                        >
                           {a.totals[stat]}
                         </div>
                       </div>
@@ -457,12 +479,14 @@ export function OptimizeScreen() {
                   </div>
 
                   {[a.weapon, ...a.armor].some((it) => it.ability) && (
-                    <ul className="mt-3 space-y-1 rounded border border-amber-300 bg-amber-50 p-2 text-xs">
+                    <ul className="mt-3 space-y-1 rounded-card border border-warning/60 bg-surface-2 p-2 text-small text-on-surface-2">
                       {[a.weapon, ...a.armor]
                         .filter((it) => it.ability)
                         .map((it, i) => (
                           <li key={i}>
-                            <span className="font-medium">{it.name}:</span>{" "}
+                            <span className="font-medium text-warning">
+                              {it.name}:
+                            </span>{" "}
                             {it.ability?.name}
                             {it.ability?.description
                               ? ` — ${it.ability.description}`
@@ -478,18 +502,21 @@ export function OptimizeScreen() {
 
           {inventoryMode === "owned" && (
             <div>
-              <h3 className="mb-1 text-sm font-semibold">
+              <h3 className="mb-1 font-display text-h2 text-on-void">
                 Leftover inventory
               </h3>
               {result.leftovers.length === 0 ? (
-                <p className="text-sm text-gray-500">
+                <p className="text-small text-text-muted">
                   Every owned item is equipped.
                 </p>
               ) : (
-                <ul className="text-sm text-gray-700">
+                <ul className="text-small text-on-void">
                   {result.leftovers.map(({ item, unused }) => (
                     <li key={item.id}>
-                      {item.name} × {unused}
+                      {item.name}{" "}
+                      <span className="font-mono text-mono text-text-muted">
+                        × {unused}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -555,21 +582,27 @@ function BossEditor({
     selectPreset(id)
   }
 
+  const inputClass =
+    "rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
+
   return (
     <div className="space-y-3">
       {bosses.map((boss) => (
         <div
           key={boss.id}
-          className="flex flex-wrap items-center gap-2 rounded border border-gray-200 p-2 text-sm"
+          className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-2 text-small text-on-surface"
         >
           <input
             value={boss.label}
             onChange={(e) => updatePreset(boss.id, { label: e.target.value })}
-            className="w-32 rounded border border-gray-300 px-2 py-1"
+            className={`w-32 ${inputClass}`}
             aria-label="Boss name"
           />
           {STAT_KEYS.map((stat) => (
-            <label key={stat} className="flex items-center gap-1 text-xs">
+            <label
+              key={stat}
+              className={`flex items-center gap-1 text-small ${STAT_TEXT_CLASS[stat]}`}
+            >
               {stat.toUpperCase()}
               <input
                 type="number"
@@ -584,7 +617,7 @@ function BossEditor({
                     },
                   })
                 }
-                className="w-14 rounded border border-gray-300 px-1 py-0.5"
+                className={`w-14 font-mono ${inputClass}`}
               />
             </label>
           ))}
@@ -595,7 +628,7 @@ function BossEditor({
                 objective: e.target.value as PresetObjective,
               })
             }
-            className="rounded border border-gray-300 px-2 py-1 text-xs"
+            className={inputClass}
           >
             <option value="weightedSum">Weighted sum</option>
             <option value="maximin">Maximin</option>
@@ -606,28 +639,31 @@ function BossEditor({
               updatePreset(boss.id, { notes: e.target.value || undefined })
             }
             placeholder="Notes"
-            className="min-w-40 flex-1 rounded border border-gray-300 px-2 py-1"
+            className={`min-w-40 flex-1 ${inputClass}`}
             aria-label="Boss notes"
           />
           <button
             type="button"
             onClick={() => deletePreset(boss.id)}
-            className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+            className="rounded border border-soul/60 px-2 py-1 text-small text-soul hover:bg-soul/10"
           >
             Delete
           </button>
         </div>
       ))}
 
-      <div className="flex flex-wrap items-center gap-2 rounded border border-dashed border-gray-300 p-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 rounded-card border border-dashed border-border p-2 text-small text-on-void">
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Boss name"
-          className="w-32 rounded border border-gray-300 px-2 py-1"
+          className={`w-32 ${inputClass}`}
         />
         {STAT_KEYS.map((stat) => (
-          <label key={stat} className="flex items-center gap-1 text-xs">
+          <label
+            key={stat}
+            className={`flex items-center gap-1 text-small ${STAT_TEXT_CLASS[stat]}`}
+          >
             {stat.toUpperCase()}
             <input
               type="number"
@@ -639,14 +675,14 @@ function BossEditor({
                   [stat]: e.target.value === "" ? 0 : Number(e.target.value),
                 }))
               }
-              className="w-14 rounded border border-gray-300 px-1 py-0.5"
+              className={`w-14 font-mono ${inputClass}`}
             />
           </label>
         ))}
         <select
           value={objective}
           onChange={(e) => setObjective(e.target.value as PresetObjective)}
-          className="rounded border border-gray-300 px-2 py-1 text-xs"
+          className={inputClass}
         >
           <option value="weightedSum">Weighted sum</option>
           <option value="maximin">Maximin</option>
@@ -655,13 +691,13 @@ function BossEditor({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes (what does this fight demand?)"
-          className="min-w-40 flex-1 rounded border border-gray-300 px-2 py-1"
+          className={`min-w-40 flex-1 ${inputClass}`}
         />
         <button
           type="button"
           onClick={addBoss}
           disabled={!label.trim()}
-          className="rounded bg-purple-600 px-3 py-1 text-xs font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="rounded bg-soul px-3 py-1 text-small font-medium text-on-soul hover:bg-soul/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Add boss
         </button>

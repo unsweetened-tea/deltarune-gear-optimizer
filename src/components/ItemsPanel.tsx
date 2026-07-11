@@ -90,12 +90,12 @@ export function ItemsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 text-sm">
+      <div className="flex flex-wrap items-center gap-3 text-small">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name..."
-          className="rounded border border-gray-300 px-2 py-1"
+          className="rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
         />
         <label className="flex items-center gap-2">
           Chapter
@@ -108,7 +108,7 @@ export function ItemsPanel() {
                   : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
               )
             }
-            className="rounded border border-gray-300 px-1 py-0.5"
+            className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
           >
             <option value="all">All</option>
             {[1, 2, 3, 4, 5].map((c) => (
@@ -123,7 +123,7 @@ export function ItemsPanel() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as "all" | ItemType)}
-            className="rounded border border-gray-300 px-1 py-0.5"
+            className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
           >
             <option value="all">All</option>
             <option value="weapon">Weapon</option>
@@ -133,27 +133,27 @@ export function ItemsPanel() {
         <button
           type="button"
           onClick={addBlankItem}
-          className="ml-auto rounded bg-purple-600 px-3 py-1 font-medium text-white hover:bg-purple-700"
+          className="ml-auto rounded bg-soul px-3 py-1 font-medium text-on-soul hover:bg-soul/90"
         >
           Add item
         </button>
       </div>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-small text-text-muted">
         {filteredItems.length} of {dataset.items.length} item(s)
       </p>
 
-      <div className="overflow-x-auto rounded border border-gray-200">
-        <table className="min-w-full text-xs">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
+        <table className="min-w-full text-small">
+          <thead className="bg-surface-2 text-on-surface-2">
             <tr>
               <th className="p-2 text-left">Name</th>
               <th className="p-2 text-left">Type</th>
               <th className="p-2 text-left">Ch.</th>
-              <th className="p-2 text-left">HP</th>
-              <th className="p-2 text-left">ATK</th>
-              <th className="p-2 text-left">DEF</th>
-              <th className="p-2 text-left">Magic</th>
+              <th className="p-2 text-left text-stat-hp">HP</th>
+              <th className="p-2 text-left text-stat-atk">ATK</th>
+              <th className="p-2 text-left text-stat-def">DEF</th>
+              <th className="p-2 text-left text-stat-magic">Magic</th>
               <th className="p-2 text-left">Equippable By</th>
               <th className="p-2 text-left">Excluded From</th>
               <th className="p-2 text-left">Ability Name</th>
@@ -165,14 +165,14 @@ export function ItemsPanel() {
           </thead>
           <tbody>
             {filteredItems.map((item) => (
-              <tr key={item.id} className="odd:bg-white even:bg-gray-50">
+              <tr key={item.id} className="odd:bg-surface even:bg-surface-2">
                 <td className="p-1">
                   <input
                     value={item.name}
                     onChange={(e) =>
                       updateItem(item.id, { name: e.target.value })
                     }
-                    className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                   />
                 </td>
                 <td className="p-1">
@@ -183,7 +183,7 @@ export function ItemsPanel() {
                         type: e.target.value as ItemType,
                       })
                     }
-                    className="rounded border border-gray-300 px-1 py-0.5"
+                    className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
                   >
                     <option value="weapon">Weapon</option>
                     <option value="armor">Armor</option>
@@ -202,7 +202,7 @@ export function ItemsPanel() {
                           | 5,
                       })
                     }
-                    className="rounded border border-gray-300 px-1 py-0.5"
+                    className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
                   >
                     {[1, 2, 3, 4, 5].map((c) => (
                       <option key={c} value={c}>
@@ -223,7 +223,7 @@ export function ItemsPanel() {
                           e.target.value === "" ? 0 : Number(e.target.value),
                         )
                       }
-                      className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                      className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
                     />
                   </td>
                 ))}
@@ -243,7 +243,7 @@ export function ItemsPanel() {
                       })
                     }
                     placeholder="all"
-                    className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                   />
                 </td>
                 <td className="p-1">
@@ -261,7 +261,7 @@ export function ItemsPanel() {
                         ),
                       })
                     }
-                    className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                   />
                 </td>
                 <td className="p-1">
@@ -270,7 +270,7 @@ export function ItemsPanel() {
                     onChange={(e) =>
                       updateItemAbility(item.id, { name: e.target.value })
                     }
-                    className="w-28 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-28 rounded border border-border bg-void px-1 py-0.5 text-on-void"
                   />
                 </td>
                 <td className="p-1">
@@ -281,7 +281,7 @@ export function ItemsPanel() {
                         description: e.target.value,
                       })
                     }
-                    className="w-40 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void"
                   />
                 </td>
                 <td className="p-1">
@@ -294,7 +294,7 @@ export function ItemsPanel() {
                         owned: e.target.value === "" ? 0 : Number(e.target.value),
                       })
                     }
-                    className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
                   />
                 </td>
                 <td className="p-1">
@@ -303,14 +303,14 @@ export function ItemsPanel() {
                     onChange={(e) =>
                       updateItem(item.id, { source: e.target.value })
                     }
-                    className="w-28 rounded border border-gray-300 px-1 py-0.5"
+                    className="w-28 rounded border border-border bg-void px-1 py-0.5 text-on-void"
                   />
                 </td>
                 <td className="p-1">
                   <button
                     type="button"
                     onClick={() => deleteItem(item.id, item.name)}
-                    className="rounded border border-red-400 px-2 py-0.5 text-red-600 hover:bg-red-50"
+                    className="rounded border border-soul/60 px-2 py-0.5 text-soul hover:bg-soul/10"
                   >
                     Delete
                   </button>

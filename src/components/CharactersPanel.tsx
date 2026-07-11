@@ -1,5 +1,6 @@
 import type { Character, CharacterSlots, Stats } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
+import { STAT_TEXT_CLASS } from "../lib/statColors"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -44,7 +45,7 @@ export function CharactersPanel() {
       {dataset.characters.map((character) => (
         <div
           key={character.id}
-          className="rounded border border-gray-200 p-4"
+          className="rounded-card border border-border bg-surface p-4 text-on-surface"
         >
           <div className="flex flex-wrap items-center gap-4">
             <input
@@ -52,10 +53,10 @@ export function CharactersPanel() {
               onChange={(e) =>
                 updateCharacter(character.id, { name: e.target.value })
               }
-              className="w-32 rounded border border-gray-300 px-2 py-1 text-sm font-semibold"
+              className="w-32 rounded border border-border bg-void px-2 py-1 font-display text-small font-semibold text-on-void"
             />
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-small">
               Level
               <input
                 type="number"
@@ -67,11 +68,11 @@ export function CharactersPanel() {
                   })
                 }
                 placeholder="—"
-                className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void placeholder:text-text-muted"
               />
             </label>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-small">
               <input
                 type="checkbox"
                 checked={character.armorRemovable}
@@ -84,7 +85,7 @@ export function CharactersPanel() {
               Armor removable
             </label>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-small">
               <input
                 type="checkbox"
                 checked={character.active}
@@ -96,10 +97,12 @@ export function CharactersPanel() {
             </label>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-4 text-sm">
+          <div className="mt-3 flex flex-wrap gap-4 text-small">
             {STAT_KEYS.map((stat) => (
               <label key={stat} className="flex items-center gap-2">
-                {stat.toUpperCase()}
+                <span className={STAT_TEXT_CLASS[stat]}>
+                  {stat.toUpperCase()}
+                </span>
                 <input
                   type="number"
                   value={character.baseStats[stat]}
@@ -110,7 +113,7 @@ export function CharactersPanel() {
                       e.target.value === "" ? 0 : Number(e.target.value),
                     )
                   }
-                  className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                  className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void placeholder:text-text-muted"
                 />
               </label>
             ))}
@@ -128,7 +131,7 @@ export function CharactersPanel() {
                     e.target.value === "" ? 0 : Number(e.target.value),
                   )
                 }
-                className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void placeholder:text-text-muted"
               />
             </label>
 
@@ -145,7 +148,7 @@ export function CharactersPanel() {
                     e.target.value === "" ? 0 : Number(e.target.value),
                   )
                 }
-                className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void placeholder:text-text-muted"
               />
             </label>
           </div>

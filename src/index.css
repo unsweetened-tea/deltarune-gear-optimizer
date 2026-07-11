@@ -1,1 +1,109 @@
 @import "tailwindcss";
+
+/*
+ * ─── Design tokens: "Dark World, modernized" ────────────────────────────
+ *
+ * PAIRED-FOREGROUND RULE (the load-bearing convention):
+ *   A component NEVER sets a background without also setting its paired
+ *   `on-` foreground, and NEVER uses a raw hex or arbitrary color value.
+ *     bg-void       → text-on-void       (or text-text-muted)
+ *     bg-surface    → text-on-surface    (or text-text-muted)
+ *     bg-surface-2  → text-on-surface-2  (or text-text-muted)
+ *     bg-soul       → text-on-soul
+ *   The entire Tailwind default palette is deleted below (--color-*:
+ *   initial), so classes like `text-gray-500` or `bg-white` no longer
+ *   produce any CSS — dark-on-dark can't be reintroduced by habit.
+ *
+ * STAT COLOR LANGUAGE (deliberate, do not collapse into one accent):
+ *   HP = green, ATK = orange, DEF = blue, Magic = purple — everywhere a
+ *   specific stat is named or shown, use its hue.
+ *
+ * CONTRAST (WCAG AA, measured against void/surface/surface-2):
+ *   text        15.7 / 14.1 / 12.9   text-muted   6.4 / 5.8 / 5.3
+ *   stat-hp     ≥9.3   stat-atk ≥6.0   stat-def ≥6.0   stat-magic ≥5.3
+ *   warning     ≥9.8   success  ≥9.3
+ *   soul was nudged #F2385A → #F5566F (same ~350° hue, lighter) to pass
+ *   as text on all surfaces: 5.7 / 5.2 / 4.7. on-soul ink on soul: 5.7.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-void: #13111c; /* app background */
+  --color-surface: #1e1b2b; /* cards / panels */
+  --color-surface-2: #262234; /* nested / elevated */
+  --color-border: #322c46; /* hairline */
+
+  --color-text: #eceaf2; /* primary text */
+  --color-text-muted: #9a93b0; /* secondary text */
+
+  --color-on-void: #eceaf2;
+  --color-on-surface: #eceaf2;
+  --color-on-surface-2: #eceaf2;
+  --color-on-soul: #13111c;
+
+  --color-soul: #f5566f; /* signature + primary action (nudged for AA) */
+
+  --color-stat-hp: #46e39b;
+  --color-stat-atk: #ff7a45;
+  --color-stat-def: #4da6ff;
+  --color-stat-magic: #b57bff;
+
+  --color-warning: #ffc53d;
+  --color-on-warning: #13111c; /* ink on warning fills: 11.8:1 */
+  --color-success: #46e39b; /* same hue family as HP: healing = green */
+  --color-focus-ring: #5edfe6;
+
+  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui,
+    sans-serif;
+  --font-body: "Hanken Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Type scale — display/headings in Bricolage, body in Hanken,
+     all numeric figures in JetBrains Mono. */
+  --text-display: 2rem;
+  --text-display--line-height: 1.15;
+  --text-display--font-weight: 700;
+  --text-h1: 1.375rem;
+  --text-h1--line-height: 1.25;
+  --text-h1--font-weight: 700;
+  --text-h2: 1.0625rem;
+  --text-h2--line-height: 1.35;
+  --text-h2--font-weight: 600;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.55;
+  --text-body--font-weight: 400;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.45;
+  --text-small--font-weight: 400;
+  --text-mono: 0.875rem;
+  --text-mono--line-height: 1.4;
+  --text-mono--font-weight: 500;
+
+  --radius-card: 0.75rem; /* 12px — soft modern, not pixel-hard, not pill */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-void);
+    color: var(--color-on-void);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

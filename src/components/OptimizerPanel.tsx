@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import type { InventoryMode, Item, Stats } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
 import { optimize, type ScoredLoadout } from "../lib/optimizer"
+import { STAT_BORDER_CLASS, STAT_TEXT_CLASS } from "../lib/statColors"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -67,15 +68,18 @@ export function OptimizerPanel() {
   const top = result?.ok ? result.loadouts.slice(0, TOP_N) : []
   const best = top[0]
 
+  const selectClass =
+    "rounded border border-border bg-void px-2 py-1 text-on-void"
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4 text-sm">
+      <div className="flex flex-wrap items-center gap-4 text-small">
         <label className="flex items-center gap-2">
-          Character
+          <span className="text-text-muted">Character</span>
           <select
             value={characterId}
             onChange={(e) => setCharacterId(e.target.value)}
-            className="rounded border border-gray-300 px-2 py-1"
+            className={selectClass}
           >
             {dataset.characters.map((c) => (
               <option key={c.id} value={c.id}>
@@ -87,11 +91,11 @@ export function OptimizerPanel() {
         </label>
 
         <label className="flex items-center gap-2">
-          Maximize
+          <span className="text-text-muted">Maximize</span>
           <select
             value={targetStat}
             onChange={(e) => setTargetStat(e.target.value as keyof Stats)}
-            className="rounded border border-gray-300 px-2 py-1"
+            className={selectClass}
           >
             {STAT_KEYS.map((stat) => (
               <option key={stat} value={stat}>
@@ -103,9 +107,9 @@ export function OptimizerPanel() {
 
         <fieldset className="flex items-center gap-2">
           <legend className="sr-only">Chapters</legend>
-          Chapters
+          <span className="text-text-muted">Chapters</span>
           {[1, 2, 3, 4, 5].map((c) => (
-            <label key={c} className="flex items-center gap-1">
+            <label key={c} className="flex items-center gap-1 font-mono">
               <input
                 type="checkbox"
                 checked={chaptersEnabled.includes(c)}
@@ -117,11 +121,11 @@ export function OptimizerPanel() {
         </fieldset>
 
         <label className="flex items-center gap-2">
-          Inventory
+          <span className="text-text-muted">Inventory</span>
           <select
             value={inventoryMode}
             onChange={(e) => setInventoryMode(e.target.value as InventoryMode)}
-            className="rounded border border-gray-300 px-2 py-1"
+            className={selectClass}
           >
             <option value="owned">Owned only</option>
             <option value="unlimited">Unlimited</option>
@@ -130,26 +134,31 @@ export function OptimizerPanel() {
       </div>
 
       {!character && (
-        <p className="text-sm text-gray-500">No character selected.</p>
+        <p className="text-small text-text-muted">No character selected.</p>
       )}
 
       {result && !result.ok && (
-        <p className="rounded border border-amber-400 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
+          <span className="font-semibold text-warning">Can’t optimize: </span>
           {result.reason}
         </p>
       )}
 
       {character && result?.ok && best && (
         <>
-          <div className="rounded border border-purple-300 bg-purple-50 p-4">
-            <h3 className="text-sm font-semibold text-purple-800">
-              Best loadout for {character.name} — max {targetStat.toUpperCase()}
+          <div className="rounded-card border border-soul/40 bg-surface p-4 text-on-surface">
+            <h3 className="font-display text-h2 text-soul">
+              Best loadout for {character.name} — max{" "}
+              <span className={STAT_TEXT_CLASS[targetStat]}>
+                {targetStat.toUpperCase()}
+              </span>
             </h3>
-            <p className="mt-2 text-sm">
-              <span className="font-medium">Weapon:</span> {best.weapon.name}
+            <p className="mt-2 text-small">
+              <span className="text-text-muted">Weapon:</span>{" "}
+              {best.weapon.name}
             </p>
-            <p className="text-sm">
-              <span className="font-medium">Armor:</span>{" "}
+            <p className="text-small">
+              <span className="text-text-muted">Armor:</span>{" "}
               {armorLabel(best.armor)}
             </p>
 
@@ -158,24 +167,32 @@ export function OptimizerPanel() {
                 <div
                   key={stat}
                   className={
-                    "rounded px-3 py-2 text-center " +
+                    "rounded border bg-surface-2 px-3 py-2 text-center text-on-surface-2 " +
                     (stat === targetStat
-                      ? "bg-purple-600 text-white"
-                      : "bg-white text-gray-800")
+                      ? STAT_BORDER_CLASS[stat]
+                      : "border-border")
                   }
                 >
-                  <div className="text-xs font-medium uppercase">{stat}</div>
-                  <div className="text-lg font-bold">{best.totals[stat]}</div>
+                  <div
+                    className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
+                  >
+                    {stat}
+                  </div>
+                  <div
+                    className={`font-mono text-h2 font-bold ${STAT_TEXT_CLASS[stat]}`}
+                  >
+                    {best.totals[stat]}
+                  </div>
                 </div>
               ))}
             </div>
 
             {abilitiesOf(best).length > 0 && (
-              <div className="mt-3 rounded border border-amber-300 bg-amber-50 p-3">
-                <h4 className="text-xs font-semibold uppercase text-amber-800">
+              <div className="mt-3 rounded-card border border-warning/60 bg-surface-2 p-3 text-on-surface-2">
+                <h4 className="text-small font-semibold uppercase text-warning">
                   Abilities (not scored — judge for yourself)
                 </h4>
-                <ul className="mt-1 space-y-1 text-sm">
+                <ul className="mt-1 space-y-1 text-small">
                   {abilitiesOf(best).map(({ item, index }) => (
                     <li key={index}>
                       <span className="font-medium">{item.name}:</span>{" "}
@@ -191,15 +208,15 @@ export function OptimizerPanel() {
           </div>
 
           <div>
-            <h3 className="mb-2 text-sm font-semibold">
+            <h3 className="mb-2 font-display text-h2 text-on-void">
               Top {top.length} loadout(s){" "}
-              <span className="font-normal text-gray-500">
+              <span className="font-body text-small font-normal text-text-muted">
                 of {result.loadouts.length} evaluated
               </span>
             </h3>
-            <div className="overflow-x-auto rounded border border-gray-200">
-              <table className="min-w-full text-xs">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
+              <table className="min-w-full text-small">
+                <thead className="bg-surface-2 text-on-surface-2">
                   <tr>
                     <th className="p-2 text-left">#</th>
                     <th className="p-2 text-left">Weapon</th>
@@ -207,10 +224,9 @@ export function OptimizerPanel() {
                     {STAT_KEYS.map((stat) => (
                       <th
                         key={stat}
-                        className={
-                          "p-2 text-left uppercase " +
-                          (stat === targetStat ? "text-purple-700" : "")
-                        }
+                        className={`p-2 text-left uppercase ${STAT_TEXT_CLASS[stat]} ${
+                          stat === targetStat ? "underline" : ""
+                        }`}
                       >
                         {stat}
                       </th>
@@ -220,19 +236,19 @@ export function OptimizerPanel() {
                 </thead>
                 <tbody>
                   {top.map((loadout, i) => (
-                    <tr key={i} className="odd:bg-white even:bg-gray-50">
-                      <td className="p-2">{i + 1}</td>
+                    <tr
+                      key={i}
+                      className="odd:bg-surface even:bg-surface-2"
+                    >
+                      <td className="p-2 font-mono">{i + 1}</td>
                       <td className="p-2">{loadout.weapon.name}</td>
                       <td className="p-2">{armorLabel(loadout.armor)}</td>
                       {STAT_KEYS.map((stat) => (
                         <td
                           key={stat}
-                          className={
-                            "p-2 " +
-                            (stat === targetStat
-                              ? "font-bold text-purple-700"
-                              : "")
-                          }
+                          className={`p-2 font-mono ${STAT_TEXT_CLASS[stat]} ${
+                            stat === targetStat ? "font-bold" : ""
+                          }`}
                         >
                           {loadout.totals[stat]}
                         </td>

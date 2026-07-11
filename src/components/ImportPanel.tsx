@@ -156,7 +156,7 @@ export function ImportPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <label className="mb-1 block text-sm font-medium">
+        <label className="mb-1 block text-small font-medium text-on-void">
           Paste a table from a wiki
         </label>
         <textarea
@@ -164,10 +164,10 @@ export function ImportPanel() {
           onChange={(e) => handleTextChange(e.target.value)}
           rows={6}
           placeholder="Paste tab/comma/pipe separated rows here..."
-          className="w-full rounded border border-gray-300 p-2 font-mono text-sm"
+          className="w-full rounded-card border border-border bg-void p-2 font-mono text-mono text-on-void placeholder:text-text-muted"
         />
         {delimiter && (
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-small text-text-muted">
             Detected delimiter: {DELIMITER_LABELS[delimiter] ?? delimiter} ·{" "}
             {rows.length} row(s) parsed
           </p>
@@ -176,7 +176,7 @@ export function ImportPanel() {
 
       {rows.length > 0 && (
         <>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-small">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -191,7 +191,7 @@ export function ImportPanel() {
               <select
                 value={batchType}
                 onChange={(e) => setBatchType(e.target.value as ItemType)}
-                className="rounded border border-gray-300 px-1 py-0.5"
+                className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
               >
                 <option value="weapon">Weapon</option>
                 <option value="armor">Armor</option>
@@ -205,7 +205,7 @@ export function ImportPanel() {
                 onChange={(e) =>
                   setBatchChapter(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)
                 }
-                className="rounded border border-gray-300 px-1 py-0.5"
+                className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
               >
                 {[1, 2, 3, 4, 5].map((c) => (
                   <option key={c} value={c}>
@@ -218,22 +218,22 @@ export function ImportPanel() {
             <button
               type="button"
               onClick={handleApplyBatchDefaults}
-              className="rounded border border-purple-600 px-2 py-1 text-purple-600 hover:bg-purple-50"
+              className="rounded border border-soul px-2 py-1 text-soul hover:bg-soul/10"
             >
               Apply type/chapter to all rows
             </button>
           </div>
 
           <div>
-            <h3 className="mb-2 text-sm font-semibold">
+            <h3 className="mb-2 font-display text-h2 text-on-void">
               Raw preview &amp; column mapping
             </h3>
-            <div className="overflow-x-auto rounded border border-gray-200">
-              <table className="min-w-full text-xs">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
+              <table className="min-w-full text-small">
+                <thead className="bg-surface-2 text-on-surface-2">
                   <tr>
                     {columnFields.map((field, i) => (
-                      <th key={i} className="border-b border-gray-200 p-2 text-left">
+                      <th key={i} className="border-b border-border p-2 text-left">
                         <select
                           value={field}
                           onChange={(e) =>
@@ -242,7 +242,7 @@ export function ImportPanel() {
                               e.target.value as ColumnField,
                             )
                           }
-                          className="w-full rounded border border-gray-300 px-1 py-0.5"
+                          className="w-full rounded border border-border bg-void px-1 py-0.5 text-on-void"
                         >
                           {COLUMN_FIELD_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -251,7 +251,7 @@ export function ImportPanel() {
                           ))}
                         </select>
                         {hasHeader && rows[0] && (
-                          <div className="mt-1 truncate text-gray-400">
+                          <div className="mt-1 truncate text-text-muted">
                             {rows[0][i]}
                           </div>
                         )}
@@ -261,9 +261,9 @@ export function ImportPanel() {
                 </thead>
                 <tbody>
                   {(hasHeader ? rows.slice(1) : rows).map((row, i) => (
-                    <tr key={i} className="odd:bg-white even:bg-gray-50">
+                    <tr key={i} className="odd:bg-surface even:bg-surface-2">
                       {row.map((cell, j) => (
-                        <td key={j} className="border-b border-gray-100 p-2">
+                        <td key={j} className="border-b border-border p-2">
                           {cell}
                         </td>
                       ))}
@@ -275,21 +275,21 @@ export function ImportPanel() {
           </div>
 
           <div>
-            <h3 className="mb-2 text-sm font-semibold">
+            <h3 className="mb-2 font-display text-h2 text-on-void">
               Draft items ({draftItems.length}) — edit before committing
             </h3>
-            <div className="overflow-x-auto rounded border border-gray-200">
-              <table className="min-w-full text-xs">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
+              <table className="min-w-full text-small">
+                <thead className="bg-surface-2 text-on-surface-2">
                   <tr>
                     <th className="p-2 text-left">Skip</th>
                     <th className="p-2 text-left">Name</th>
                     <th className="p-2 text-left">Type</th>
                     <th className="p-2 text-left">Ch.</th>
-                    <th className="p-2 text-left">HP</th>
-                    <th className="p-2 text-left">ATK</th>
-                    <th className="p-2 text-left">DEF</th>
-                    <th className="p-2 text-left">Magic</th>
+                    <th className="p-2 text-left text-stat-hp">HP</th>
+                    <th className="p-2 text-left text-stat-atk">ATK</th>
+                    <th className="p-2 text-left text-stat-def">DEF</th>
+                    <th className="p-2 text-left text-stat-magic">Magic</th>
                     <th className="p-2 text-left">Ability</th>
                     <th className="p-2 text-left">Equippable By</th>
                   </tr>
@@ -300,8 +300,8 @@ export function ImportPanel() {
                       key={row.key}
                       className={
                         row.name.trim() === "" && !row.skip
-                          ? "bg-red-50"
-                          : "odd:bg-white even:bg-gray-50"
+                          ? "bg-soul/10"
+                          : "odd:bg-surface even:bg-surface-2"
                       }
                     >
                       <td className="p-1">
@@ -319,7 +319,7 @@ export function ImportPanel() {
                           onChange={(e) =>
                             updateDraftRow(i, { name: e.target.value })
                           }
-                          className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                         />
                       </td>
                       <td className="p-1">
@@ -330,7 +330,7 @@ export function ImportPanel() {
                               type: e.target.value as ItemType,
                             })
                           }
-                          className="rounded border border-gray-300 px-1 py-0.5"
+                          className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
                         >
                           <option value="weapon">Weapon</option>
                           <option value="armor">Armor</option>
@@ -349,7 +349,7 @@ export function ImportPanel() {
                                 | 5,
                             })
                           }
-                          className="rounded border border-gray-300 px-1 py-0.5"
+                          className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
                         >
                           {[1, 2, 3, 4, 5].map((c) => (
                             <option key={c} value={c}>
@@ -371,7 +371,7 @@ export function ImportPanel() {
                                     : Number(e.target.value),
                               })
                             }
-                            className="w-16 rounded border border-gray-300 px-1 py-0.5"
+                            className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
                           />
                         </td>
                       ))}
@@ -381,7 +381,7 @@ export function ImportPanel() {
                           onChange={(e) =>
                             updateDraftRow(i, { abilityName: e.target.value })
                           }
-                          className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                         />
                       </td>
                       <td className="p-1">
@@ -393,7 +393,7 @@ export function ImportPanel() {
                             })
                           }
                           placeholder="all"
-                          className="w-32 rounded border border-gray-300 px-1 py-0.5"
+                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
                         />
                       </td>
                     </tr>
@@ -404,7 +404,7 @@ export function ImportPanel() {
           </div>
 
           {pendingCollision && (
-            <div className="rounded border border-amber-400 bg-amber-50 p-4 text-sm">
+            <div className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
               <p className="font-medium">
                 {pendingCollision.colliding.length} item(s) already exist:{" "}
                 {pendingCollision.colliding
@@ -421,7 +421,7 @@ export function ImportPanel() {
                       "overwrite",
                     )
                   }
-                  className="rounded bg-amber-600 px-3 py-1 text-white hover:bg-amber-700"
+                  className="rounded bg-warning px-3 py-1 font-medium text-on-warning hover:bg-warning/90"
                 >
                   Overwrite existing
                 </button>
@@ -434,14 +434,14 @@ export function ImportPanel() {
                       "skip",
                     )
                   }
-                  className="rounded border border-amber-600 px-3 py-1 text-amber-700 hover:bg-amber-100"
+                  className="rounded border border-warning/60 px-3 py-1 text-warning hover:bg-warning/10"
                 >
                   Skip these
                 </button>
                 <button
                   type="button"
                   onClick={() => setPendingCollision(null)}
-                  className="rounded border border-gray-300 px-3 py-1 text-gray-600 hover:bg-gray-100"
+                  className="rounded border border-border px-3 py-1 text-on-surface hover:bg-surface-2"
                 >
                   Cancel
                 </button>
@@ -453,7 +453,7 @@ export function ImportPanel() {
             type="button"
             onClick={handleCommit}
             disabled={draftItems.length === 0 || pendingCollision !== null}
-            className="rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+            className="rounded bg-soul px-4 py-2 text-small font-medium text-on-soul hover:bg-soul/90 disabled:opacity-50"
           >
             Commit {draftItems.filter((r) => !r.skip).length} item(s) to
             dataset
@@ -461,7 +461,7 @@ export function ImportPanel() {
         </>
       )}
 
-      {message && <p className="text-sm text-green-700">{message}</p>}
+      {message && <p className="text-small text-success">{message}</p>}
     </div>
   )
 }
