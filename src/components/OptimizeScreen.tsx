@@ -294,7 +294,7 @@ export function OptimizeScreen() {
       )}
 
       {category === "boss" ? (
-        <BossPanel />
+        <BossPanel onMarkUnavailable={markUnavailable} />
       ) : dataset.items.length === 0 ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           No items in your dataset yet. Paste gear tables in the{" "}
@@ -318,29 +318,33 @@ export function OptimizeScreen() {
         </p>
       ) : result?.ok ? (
         <>
-          <div className="rounded-card border border-soul/40 bg-surface p-4 text-small text-on-surface">
-            <span className="font-display text-h2 text-soul">
-              {preset.label}
-            </span>
-            <span className="ml-3 text-text-muted">
-              {objectiveLabel(preset.objective)} ·{" "}
-              {inventoryMode === "owned" ? "Owned pool (shared)" : "Unlimited"}
-            </span>
-            <span className="ml-3 font-mono text-h2 font-bold">
-              {result.objectiveScore}
-            </span>
-            {preset.objective === "maximin" && (
-              <span className="ml-2 text-text-muted">
-                (weakest member:{" "}
-                {
-                  result.assignments.reduce((min, a) =>
-                    a.score < min.score ? a : min,
-                  ).character.name
-                }
-                )
+          {result.assignments.length > 0 && (
+            <div className="rounded-card border border-soul/40 bg-surface p-4 text-small text-on-surface">
+              <span className="font-display text-h2 text-soul">
+                {preset.label}
               </span>
-            )}
-          </div>
+              <span className="ml-3 text-text-muted">
+                {objectiveLabel(preset.objective)} ·{" "}
+                {inventoryMode === "owned"
+                  ? "Owned pool (shared)"
+                  : "Unlimited"}
+              </span>
+              <span className="ml-3 font-mono text-h2 font-bold">
+                {result.objectiveScore}
+              </span>
+              {preset.objective === "maximin" && (
+                <span className="ml-2 text-text-muted">
+                  (weakest member:{" "}
+                  {
+                    result.assignments.reduce((min, a) =>
+                      a.score < min.score ? a : min,
+                    ).character.name
+                  }
+                  )
+                </span>
+              )}
+            </div>
+          )}
 
           <p className="text-small text-text-muted">
             <span className="font-medium text-on-void">Remove</span> empties
@@ -487,6 +491,25 @@ export function OptimizeScreen() {
                 </div>
               )
             })}
+            {result.blocked.map((b) => (
+              <div
+                key={b.character.id}
+                className="rounded-card border border-warning/60 bg-surface p-4 text-on-surface"
+              >
+                <h3 className="font-display text-h2">{b.character.name}</h3>
+                <ul className="mt-2 space-y-1 text-small">
+                  <li>
+                    <span className="text-text-muted">
+                      {b.reason.toLowerCase().includes("weapon")
+                        ? "Weapon:"
+                        : "Armor:"}
+                    </span>{" "}
+                    <span className="text-warning">(none available)</span>
+                  </li>
+                </ul>
+                <p className="mt-2 text-small text-warning">{b.reason}</p>
+              </div>
+            ))}
           </div>
 
           {inventoryMode === "owned" && (

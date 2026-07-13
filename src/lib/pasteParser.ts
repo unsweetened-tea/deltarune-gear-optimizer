@@ -143,9 +143,11 @@ export function draftToItem(
     equippableBy: parseEquippableBy(row.equippableByText, characters),
     excludedFrom: existing?.excludedFrom ?? [],
     ability,
-    owned: existing?.owned ?? 0,
+    // Availability is a quantity, default one-of-each for new items.
+    owned: existing?.owned ?? 1,
     source: existing?.source,
     resistances:
       parseResistances(row.resistancesText) ?? existing?.resistances,
+    excludeFromOptimizer: existing?.excludeFromOptimizer,
   }
 }

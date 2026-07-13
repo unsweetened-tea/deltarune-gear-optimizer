@@ -84,7 +84,7 @@ export function ItemsPanel() {
       stats: { hp: 0, atk: 0, def: 0, magic: 0 },
       equippableBy: "all",
       excludedFrom: [],
-      owned: 0,
+      owned: 1,
     }
     setDataset((prev) => ({ ...prev, items: [...prev.items, newItem] }))
   }
@@ -161,6 +161,12 @@ export function ItemsPanel() {
               <th className="p-2 text-left">Ability Name</th>
               <th className="p-2 text-left">Ability Desc.</th>
               <th className="p-2 text-left">Owned</th>
+              <th
+                className="p-2 text-left"
+                title="Never a candidate in any optimizer, regardless of owned — for joke/unused gear"
+              >
+                Exclude
+              </th>
               <th className="p-2 text-left">Source</th>
               <th className="p-2 text-left"></th>
             </tr>
@@ -310,6 +316,18 @@ export function ItemsPanel() {
                       })
                     }
                     className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
+                  />
+                </td>
+                <td className="p-1 text-center">
+                  <input
+                    type="checkbox"
+                    checked={item.excludeFromOptimizer === true}
+                    onChange={(e) =>
+                      updateItem(item.id, {
+                        excludeFromOptimizer: e.target.checked || undefined,
+                      })
+                    }
+                    aria-label="Exclude from optimizer"
                   />
                 </td>
                 <td className="p-1">

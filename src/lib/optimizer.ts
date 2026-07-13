@@ -35,6 +35,8 @@ export function isAvailable(
   chaptersEnabled: number[],
   inventoryMode: InventoryMode,
 ): boolean {
+  // Permanent exclusion applies in every mode — even unlimited/theorycraft.
+  if (item.excludeFromOptimizer === true) return false
   if (!chaptersEnabled.includes(item.chapter)) return false
   if (inventoryMode === "owned" && item.owned <= 0) return false
   return true

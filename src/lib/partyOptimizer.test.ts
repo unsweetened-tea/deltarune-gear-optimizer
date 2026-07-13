@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Character, Item, Stats } from "../types/data"
+import { optimize } from "./optimizer"
 import {
   enumerateMemberLoadouts,
   optimizeParty,
@@ -167,9 +168,27 @@ describe("optimizeParty branch-and-bound vs brute force", () => {
       const perMember = party.map((c) =>
         enumerateMemberLoadouts(c, items, weights, [1, 2, 3, 4, 5], "owned"),
       )
+      // M6: members with zero individually-legal loadouts are reported
+      // as blocked, not failed — brute-force only the equippable rest.
+      const equippablePerMember = perMember.filter((l) => l.length > 0)
+      const expectedBlocked = perMember.length - equippablePerMember.length
+
+      if (equippablePerMember.length === 0) {
+        expect(result.ok, `trial ${trial}: all-blocked is ok:true`).toBe(true)
+        if (result.ok) {
+          expect(result.assignments).toHaveLength(0)
+          expect(result.blocked).toHaveLength(expectedBlocked)
+        }
+        continue
+      }
+
       const inventory = new Map<string, number>()
       for (const it of items) if (it.owned > 0) inventory.set(it.id, it.owned)
-      const expected = bruteForceBest(perMember, objective, inventory)
+      const expected = bruteForceBest(
+        equippablePerMember,
+        objective,
+        inventory,
+      )
 
       if (expected === null) {
         expect(result.ok, `trial ${trial}: expected infeasible`).toBe(false)
@@ -177,6 +196,10 @@ describe("optimizeParty branch-and-bound vs brute force", () => {
       }
       expect(result.ok, `trial ${trial}: expected feasible`).toBe(true)
       if (result.ok) {
+        expect(
+          result.blocked,
+          `trial ${trial}: blocked count`,
+        ).toHaveLength(expectedBlocked)
         expect(
           result.objectiveScore,
           `trial ${trial} (${objective}): B&B diverged from brute force`,
@@ -311,6 +334,110 @@ describe("armorRemovable constraint in party mode", () => {
         (a) => a.character.id === "susie",
       )
       expect(susieAssignment?.armor.length).toBeGreaterThanOrEqual(1)
+    }
+  })
+})
+
+describe("M6: shared candidate pool", () => {
+  const kris = makeCharacter({ id: "kris" })
+  const ralsei = makeCharacter({ id: "ralsei" })
+  const sword = makeItem({ id: "sword", type: "weapon", stats: { hp: 0, atk: 1, def: 0, magic: 0 } })
+  const godWeapon = makeItem({
+    id: "everybody-weapon",
+    type: "weapon",
+    stats: { hp: 99, atk: 99, def: 99, magic: 99 },
+    excludeFromOptimizer: true,
+  })
+
+  it("never considers excludeFromOptimizer items, even in unlimited mode", () => {
+    for (const inventoryMode of ["owned", "unlimited"] as const) {
+      const party = optimizeParty({
+        party: [kris],
+        items: [sword, godWeapon],
+        weights: UNIT_WEIGHTS,
+        objective: "sum",
+        chaptersEnabled: [1],
+        inventoryMode,
+      })
+      expect(party.ok).toBe(true)
+      if (party.ok) {
+        expect(party.assignments[0].weapon.id).toBe("sword")
+      }
+
+      const solo = optimize({
+        character: kris,
+        items: [sword, godWeapon],
+        targetStat: "atk",
+        chaptersEnabled: [1],
+        inventoryMode,
+      })
+      expect(solo.ok).toBe(true)
+      if (solo.ok) {
+        expect(solo.loadouts[0].weapon.id).toBe("sword")
+      }
+    }
+  })
+
+  it("blocks a member with no legal weapon instead of failing the party", () => {
+    const krisOnlySword = makeItem({
+      id: "kris-sword",
+      type: "weapon",
+      equippableBy: ["kris"],
+    })
+    const result = optimizeParty({
+      party: [kris, ralsei],
+      items: [krisOnlySword],
+      weights: UNIT_WEIGHTS,
+      objective: "sum",
+      chaptersEnabled: [1],
+      inventoryMode: "owned",
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.assignments).toHaveLength(1)
+      expect(result.assignments[0].character.id).toBe("kris")
+      expect(result.blocked).toHaveLength(1)
+      expect(result.blocked[0].character.id).toBe("ralsei")
+      expect(result.blocked[0].reason).toMatch(/No available weapon/)
+    }
+  })
+
+  it("pruning owned to 0 removes the item and re-solve finds the alternative", () => {
+    const best = makeItem({ id: "best", type: "weapon", stats: { hp: 0, atk: 9, def: 0, magic: 0 } })
+    const backup = makeItem({ id: "backup", type: "weapon", stats: { hp: 0, atk: 2, def: 0, magic: 0 } })
+    const before = optimizeParty({
+      party: [kris],
+      items: [best, backup],
+      weights: UNIT_WEIGHTS,
+      objective: "sum",
+      chaptersEnabled: [1],
+      inventoryMode: "owned",
+    })
+    expect(before.ok && before.assignments[0].weapon.id).toBe("best")
+
+    const pruned = [{ ...best, owned: 0 }, backup]
+    const after = optimizeParty({
+      party: [kris],
+      items: pruned,
+      weights: UNIT_WEIGHTS,
+      objective: "sum",
+      chaptersEnabled: [1],
+      inventoryMode: "owned",
+    })
+    expect(after.ok && after.assignments[0].weapon.id).toBe("backup")
+
+    const afterBoth = optimizeParty({
+      party: [kris],
+      items: [{ ...best, owned: 0 }, { ...backup, owned: 0 }],
+      weights: UNIT_WEIGHTS,
+      objective: "sum",
+      chaptersEnabled: [1],
+      inventoryMode: "owned",
+    })
+    expect(afterBoth.ok).toBe(true)
+    if (afterBoth.ok) {
+      expect(afterBoth.assignments).toHaveLength(0)
+      expect(afterBoth.blocked[0].reason).toMatch(/No available weapon/)
     }
   })
 })

@@ -35,9 +35,12 @@ export interface Item {
   equippableBy: "all" | string[]
   excludedFrom: string[]
   ability?: Ability
+  /** How many copies you have. Distinct from excludeFromOptimizer: owned is "do I have it right now". */
   owned: number
   source?: string
   resistances?: Resistance[]
+  /** Never a candidate in ANY optimizer, regardless of owned — for joke/unused gear that breaks the math. */
+  excludeFromOptimizer?: boolean
 }
 
 export interface CharacterSlots {

@@ -25,6 +25,12 @@ export interface LeftoverItem {
   unused: number
 }
 
+/** A member the pool can't equip at all (e.g. their last weapon was pruned). */
+export interface BlockedMember {
+  character: Character
+  reason: string
+}
+
 export interface PartyOptimizeInput {
   party: Character[]
   items: Item[]
@@ -38,6 +44,8 @@ export type PartyOptimizeResult =
   | {
       ok: true
       assignments: MemberAssignment[]
+      /** Members with zero legal loadouts — shown per-slot, never silently dropped. */
+      blocked: BlockedMember[]
       objectiveScore: number
       leftovers: LeftoverItem[]
     }
@@ -229,7 +237,10 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
     return { ok: false, reason: "No active party members selected." }
   }
 
-  // Per-member degenerate checks with specific messages.
+  // Members the pool can't equip at all become per-slot messages
+  // instead of failing the whole party result.
+  const blocked: BlockedMember[] = []
+  const equippableParty: Character[] = []
   for (const character of party) {
     const eligible = items.filter(
       (it) =>
@@ -237,23 +248,38 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
         isAvailable(it, chaptersEnabled, inventoryMode),
     )
     if (!eligible.some((it) => it.type === "weapon")) {
-      return {
-        ok: false,
-        reason: `${character.name} has no equippable weapon with the current filters (check chapter filter, inventory mode, and owned counts).`,
-      }
+      blocked.push({
+        character,
+        reason: `No available weapon for ${character.name} — check owned counts, chapter filter, and exclusions.`,
+      })
+      continue
     }
     if (
       !character.armorRemovable &&
       !eligible.some((it) => it.type === "armor")
     ) {
-      return {
-        ok: false,
-        reason: `${character.name} cannot unequip armor, but no armor is available with the current filters.`,
-      }
+      blocked.push({
+        character,
+        reason: `${character.name} cannot unequip armor, but no armor is available — check owned counts, chapter filter, and exclusions.`,
+      })
+      continue
+    }
+    equippableParty.push(character)
+  }
+
+  if (equippableParty.length === 0) {
+    return {
+      ok: true,
+      assignments: [],
+      blocked,
+      objectiveScore: 0,
+      leftovers: items
+        .filter((it) => it.owned > 0)
+        .map((it) => ({ item: it, unused: it.owned })),
     }
   }
 
-  const memberLoadouts = party.map((character) => ({
+  const memberLoadouts = equippableParty.map((character) => ({
     character,
     loadouts: enumerateMemberLoadouts(
       character,
@@ -303,7 +329,9 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
       ]),
     )
     // Restore the caller's party order.
-    assignments = party.map((c) => byId.get(c.id) as MemberAssignment)
+    assignments = equippableParty.map(
+      (c) => byId.get(c.id) as MemberAssignment,
+    )
   }
 
   const objectiveScore =
@@ -322,5 +350,5 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
     .map((it) => ({ item: it, unused: it.owned - (used.get(it.id) ?? 0) }))
     .filter(({ unused }) => unused > 0)
 
-  return { ok: true, assignments, objectiveScore, leftovers }
+  return { ok: true, assignments, blocked, objectiveScore, leftovers }
 }

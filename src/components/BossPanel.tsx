@@ -3,6 +3,7 @@ import type {
   Boss,
   BossSpecialRule,
   Element,
+  Item,
   WinCondition,
 } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
@@ -22,7 +23,11 @@ const PROFILE_KEYS: (Exclude<Element, "all"> | "neutral")[] = [
 const inputClass =
   "rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
 
-export function BossPanel() {
+export function BossPanel({
+  onMarkUnavailable,
+}: {
+  onMarkUnavailable: (item: Item) => void
+}) {
   const { dataset, setDataset } = useDataset()
   const [selectedBossId, setSelectedBossId] = useState<string | null>(null)
   const [newName, setNewName] = useState("")
@@ -234,14 +239,32 @@ export function BossPanel() {
                     </p>
 
                     <ul className="mt-2 space-y-1 text-small">
-                      <li>
-                        <span className="text-text-muted">Weapon:</span>{" "}
-                        {a.weapon.name}
+                      <li className="flex items-center gap-2">
+                        <span>
+                          <span className="text-text-muted">Weapon:</span>{" "}
+                          {a.weapon.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onMarkUnavailable(a.weapon)}
+                          className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
+                        >
+                          I don&apos;t have this
+                        </button>
                       </li>
                       {a.armor.map((piece, i) => (
-                        <li key={i}>
-                          <span className="text-text-muted">Armor:</span>{" "}
-                          {piece.name}
+                        <li key={i} className="flex items-center gap-2">
+                          <span>
+                            <span className="text-text-muted">Armor:</span>{" "}
+                            {piece.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onMarkUnavailable(piece)}
+                            className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
+                          >
+                            I don&apos;t have this
+                          </button>
                         </li>
                       ))}
                       {a.armor.length === 0 && (
@@ -279,6 +302,27 @@ export function BossPanel() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                ))}
+                {result.blocked.map((b) => (
+                  <div
+                    key={b.character.id}
+                    className="rounded-card border border-warning/60 bg-surface p-4 text-on-surface"
+                  >
+                    <h3 className="font-display text-h2">
+                      {b.character.name}
+                    </h3>
+                    <ul className="mt-2 space-y-1 text-small">
+                      <li>
+                        <span className="text-text-muted">
+                          {b.reason.toLowerCase().includes("weapon")
+                            ? "Weapon:"
+                            : "Armor:"}
+                        </span>{" "}
+                        <span className="text-warning">(none available)</span>
+                      </li>
+                    </ul>
+                    <p className="mt-2 text-small text-warning">{b.reason}</p>
                   </div>
                 ))}
               </div>

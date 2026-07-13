@@ -76,7 +76,9 @@ function isItem(value: unknown): value is Item {
     (value.source === undefined || typeof value.source === "string") &&
     (value.resistances === undefined ||
       (Array.isArray(value.resistances) &&
-        value.resistances.every(isResistance)))
+        value.resistances.every(isResistance))) &&
+    (value.excludeFromOptimizer === undefined ||
+      typeof value.excludeFromOptimizer === "boolean")
   )
 }
 

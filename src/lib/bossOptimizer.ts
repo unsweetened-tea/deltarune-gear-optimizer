@@ -15,6 +15,7 @@ import {
 import {
   loadoutUsage,
   solvePool,
+  type BlockedMember,
   type MemberLoadout,
   type SearchMember,
 } from "./partyOptimizer"
@@ -79,6 +80,7 @@ export type BossOptimizeResult =
   | {
       ok: true
       assignments: BossMemberResult[]
+      blocked: BlockedMember[]
       partyThreat: number
       verdicts: ItemVerdict[]
       leftovers: { item: Item; unused: number }[]
@@ -274,6 +276,8 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
     return { ok: false, reason: "No active party members selected." }
   }
 
+  const blocked: BlockedMember[] = []
+  const equippableParty: typeof party = []
   for (const character of party) {
     const eligible = items.filter(
       (it) =>
@@ -281,23 +285,39 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
         isAvailable(it, chaptersEnabled, inventoryMode),
     )
     if (!eligible.some((it) => it.type === "weapon")) {
-      return {
-        ok: false,
-        reason: `${character.name} has no equippable weapon with the current filters (check chapter filter, inventory mode, and owned counts).`,
-      }
+      blocked.push({
+        character,
+        reason: `No available weapon for ${character.name} — check owned counts, chapter filter, and exclusions.`,
+      })
+      continue
     }
     if (
       !character.armorRemovable &&
       !eligible.some((it) => it.type === "armor")
     ) {
-      return {
-        ok: false,
-        reason: `${character.name} cannot unequip armor, but no armor is available with the current filters.`,
-      }
+      blocked.push({
+        character,
+        reason: `${character.name} cannot unequip armor, but no armor is available — check owned counts, chapter filter, and exclusions.`,
+      })
+      continue
+    }
+    equippableParty.push(character)
+  }
+
+  if (equippableParty.length === 0) {
+    return {
+      ok: true,
+      assignments: [],
+      blocked,
+      partyThreat: 0,
+      verdicts: [],
+      leftovers: items
+        .filter((it) => it.owned > 0)
+        .map((it) => ({ item: it, unused: it.owned })),
     }
   }
 
-  const memberLoadouts = party.map((character) => ({
+  const memberLoadouts = equippableParty.map((character) => ({
     character,
     loadouts: enumerateBossLoadouts(
       character,
@@ -347,7 +367,7 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
     )
   }
 
-  const assignments: BossMemberResult[] = party.map((character) => {
+  const assignments: BossMemberResult[] = equippableParty.map((character) => {
     const pick = picksByCharacter.get(character.id) as EvaluatedLoadout
     return {
       character,
@@ -474,5 +494,5 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
     verdicts.push({ item, used: false, reasons })
   }
 
-  return { ok: true, assignments, partyThreat, verdicts, leftovers }
+  return { ok: true, assignments, blocked, partyThreat, verdicts, leftovers }
 }
