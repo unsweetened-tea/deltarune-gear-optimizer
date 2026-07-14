@@ -15,6 +15,7 @@ import { CharactersPanel } from "./components/CharactersPanel"
 import { OptimizerPanel } from "./components/OptimizerPanel"
 import { OptimizeScreen } from "./components/OptimizeScreen"
 import { StylePanel } from "./components/StylePanel"
+import { PrimaryNav } from "./components/PrimaryNav"
 
 type Tab = "optimize" | "solo" | "import" | "items" | "characters" | "style"
 
@@ -41,6 +42,8 @@ function App() {
   })
 
   const visibleTabs = TABS.filter((t) => !t.devOnly || import.meta.env.DEV)
+  const currentLabel =
+    visibleTabs.find((t) => t.id === tab)?.label ?? "Optimize"
 
   const handleImportClick = () => {
     fileInputRef.current?.click()
@@ -82,88 +85,83 @@ function App() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-display text-on-void">
-          Deltarune Gear Optimizer
-        </h1>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => downloadDataset(dataset)}
-            className="rounded bg-soul px-4 py-2 text-small font-medium text-on-soul hover:bg-soul/90"
-          >
-            Export JSON
-          </button>
-          <button
-            type="button"
-            onClick={handleImportClick}
-            className="rounded border border-soul px-4 py-2 text-small font-medium text-soul hover:bg-soul/10"
-          >
-            Import JSON
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            title="Replace your entire dataset with the bundled defaults (asks for confirmation)"
-            className="rounded border border-warning/60 px-4 py-2 text-small font-medium text-warning hover:bg-warning/10"
-          >
-            Reset to default data
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json"
-            onChange={handleFileChange}
-            className="hidden"
+    <div className="min-h-screen bg-void text-on-void">
+      <header className="sticky top-0 z-30 border-b border-border bg-void">
+        <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-8">
+          <span className="font-display text-h2 text-on-void">
+            Deltarune Gear Optimizer
+          </span>
+          <PrimaryNav
+            sections={visibleTabs}
+            activeId={tab}
+            onSelect={(id) => setTab(id as Tab)}
           />
         </div>
       </header>
 
-      {showSeedNote && (
-        <p className="mt-4 flex items-center gap-3 rounded-card border border-border bg-surface-2 p-3 text-small text-on-surface-2">
-          <span>
-            A newer default dataset (v{bundledSeedVersion}) is bundled with
-            this build. Your saved data was kept as-is — use{" "}
-            <span className="font-medium">Reset to default data</span> to load
-            it (your edits would be lost).
-          </span>
-          <button
-            type="button"
-            onClick={handleDismissSeedNote}
-            className="ml-auto rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:bg-surface"
-          >
-            Dismiss
-          </button>
-        </p>
-      )}
+      <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+        {showSeedNote && (
+          <p className="mb-6 flex items-center gap-3 rounded-card border border-border bg-surface-2 p-3 text-small text-on-surface-2">
+            <span>
+              A newer default dataset (v{bundledSeedVersion}) is bundled with
+              this build. Your saved data was kept as-is — use{" "}
+              <span className="font-medium">Reset to default data</span> to
+              load it (your edits would be lost).
+            </span>
+            <button
+              type="button"
+              onClick={handleDismissSeedNote}
+              className="ml-auto shrink-0 rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:bg-surface"
+            >
+              Dismiss
+            </button>
+          </p>
+        )}
 
-      <nav className="mt-6 flex gap-1 border-b border-border">
-        {visibleTabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={
-              "px-4 py-2 text-small font-medium " +
-              (tab === t.id
-                ? "border-b-2 border-soul text-soul"
-                : "text-text-muted hover:text-on-void")
-            }
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="font-display text-h1 text-on-void">{currentLabel}</h1>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => downloadDataset(dataset)}
+              className="rounded bg-soul px-4 py-2 text-small font-medium text-on-soul hover:bg-soul/90"
+            >
+              Export JSON
+            </button>
+            <button
+              type="button"
+              onClick={handleImportClick}
+              className="rounded border border-soul px-4 py-2 text-small font-medium text-soul hover:bg-soul/10"
+            >
+              Import JSON
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              title="Replace your entire dataset with the bundled defaults (asks for confirmation)"
+              className="rounded border border-warning/60 px-4 py-2 text-small font-medium text-warning hover:bg-warning/10"
+            >
+              Reset to default data
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+        </div>
 
-      <main className="mt-6">
-        {tab === "optimize" && <OptimizeScreen />}
-        {tab === "solo" && <OptimizerPanel />}
-        {tab === "import" && <ImportPanel />}
-        {tab === "items" && <ItemsPanel />}
-        {tab === "characters" && <CharactersPanel />}
-        {tab === "style" && <StylePanel />}
-      </main>
+        <main className="mt-6">
+          {tab === "optimize" && <OptimizeScreen />}
+          {tab === "solo" && <OptimizerPanel />}
+          {tab === "import" && <ImportPanel />}
+          {tab === "items" && <ItemsPanel />}
+          {tab === "characters" && <CharactersPanel />}
+          {tab === "style" && <StylePanel />}
+        </main>
+      </div>
     </div>
   )
 }
