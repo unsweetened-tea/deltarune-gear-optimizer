@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react"
 import type { InventoryMode, Item, Stats } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
+import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimize, type ScoredLoadout } from "../lib/optimizer"
 import { STAT_BORDER_CLASS, STAT_TEXT_CLASS } from "../lib/statColors"
+import { RecentlyUnavailable } from "./RecentlyUnavailable"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -31,6 +33,9 @@ export function OptimizerPanel() {
       "",
   )
   const [targetStat, setTargetStat] = useState<keyof Stats>("atk")
+
+  const { recentlyUnavailable, markUnavailable, undoUnavailable } =
+    useMarkUnavailable()
 
   const character = dataset.characters.find((c) => c.id === characterId)
   const { chaptersEnabled, inventoryMode } = dataset.settings
@@ -133,6 +138,11 @@ export function OptimizerPanel() {
         </label>
       </div>
 
+      <RecentlyUnavailable
+        entries={recentlyUnavailable}
+        onUndo={undoUnavailable}
+      />
+
       {!character && (
         <p className="text-small text-text-muted">No character selected.</p>
       )}
@@ -153,14 +163,39 @@ export function OptimizerPanel() {
                 {targetStat.toUpperCase()}
               </span>
             </h3>
-            <p className="mt-2 text-small">
-              <span className="text-text-muted">Weapon:</span>{" "}
-              {best.weapon.name}
-            </p>
-            <p className="text-small">
-              <span className="text-text-muted">Armor:</span>{" "}
-              {armorLabel(best.armor)}
-            </p>
+            <ul className="mt-2 space-y-1 text-small">
+              <li className="flex items-center gap-2">
+                <span>
+                  <span className="text-text-muted">Weapon:</span>{" "}
+                  {best.weapon.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => markUnavailable(best.weapon)}
+                  className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
+                >
+                  I don&apos;t have this
+                </button>
+              </li>
+              {best.armor.length === 0 && (
+                <li className="text-text-muted">Armor: (no armor)</li>
+              )}
+              {best.armor.map((piece, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span>
+                    <span className="text-text-muted">Armor:</span>{" "}
+                    {piece.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => markUnavailable(piece)}
+                    className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
+                  >
+                    I don&apos;t have this
+                  </button>
+                </li>
+              ))}
+            </ul>
 
             <div className="mt-3 flex gap-4">
               {STAT_KEYS.map((stat) => (

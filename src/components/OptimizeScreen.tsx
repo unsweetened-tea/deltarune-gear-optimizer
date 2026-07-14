@@ -2,16 +2,17 @@ import { useState } from "react"
 import type {
   Character,
   InventoryMode,
-  Item,
   PresetCategory,
   PresetObjective,
   Stats,
 } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
+import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimizeParty } from "../lib/partyOptimizer"
 import { toPartyObjective } from "../lib/presets"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { BossPanel } from "./BossPanel"
+import { RecentlyUnavailable } from "./RecentlyUnavailable"
 import { SoulHeart } from "./SoulHeart"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
@@ -21,12 +22,6 @@ const CATEGORIES: { id: PresetCategory; label: string }[] = [
   { id: "stat", label: "Stat" },
   { id: "boss", label: "Bosses" },
 ]
-
-interface UnavailableEntry {
-  itemId: string
-  itemName: string
-  previousOwned: number
-}
 
 function objectiveLabel(objective: PresetObjective): string {
   return objective === "weightedSum" ? "Weighted sum" : "Maximin"
@@ -52,9 +47,8 @@ export function OptimizeScreen() {
   >({ playstyle: "playstyle-balanced", stat: "stat-hp", boss: null })
   /** Build-local: armor slots locked empty per member id. Reset on preset change. */
   const [locks, setLocks] = useState<Record<string, number>>({})
-  const [recentlyUnavailable, setRecentlyUnavailable] = useState<
-    UnavailableEntry[]
-  >([])
+  const { recentlyUnavailable, markUnavailable, undoUnavailable } =
+    useMarkUnavailable()
 
   const categoryPresets = dataset.presets.filter(
     (p) => p.category === category,
@@ -112,30 +106,6 @@ export function OptimizeScreen() {
       delete next[memberId]
       return next
     })
-  }
-
-  function markUnavailable(item: Item) {
-    if (item.owned <= 0) return
-    setRecentlyUnavailable((prev) => [
-      { itemId: item.id, itemName: item.name, previousOwned: item.owned },
-      ...prev,
-    ])
-    setDataset((prev) => ({
-      ...prev,
-      items: prev.items.map((it) =>
-        it.id === item.id ? { ...it, owned: 0 } : it,
-      ),
-    }))
-  }
-
-  function undoUnavailable(entry: UnavailableEntry) {
-    setDataset((prev) => ({
-      ...prev,
-      items: prev.items.map((it) =>
-        it.id === entry.itemId ? { ...it, owned: entry.previousOwned } : it,
-      ),
-    }))
-    setRecentlyUnavailable((prev) => prev.filter((e) => e !== entry))
   }
 
   function toggleActive(id: string) {
@@ -271,27 +241,10 @@ export function OptimizeScreen() {
         </label>
       </div>
 
-      {recentlyUnavailable.length > 0 && (
-        <div className="rounded-card border border-border bg-surface-2 p-3 text-small text-on-surface-2">
-          <h3 className="text-small font-semibold text-text-muted uppercase">
-            Recently marked unavailable (owned set to 0)
-          </h3>
-          <ul className="mt-1 space-y-1">
-            {recentlyUnavailable.map((entry, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <span>{entry.itemName}</span>
-                <button
-                  type="button"
-                  onClick={() => undoUnavailable(entry)}
-                  className="rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:border-soul hover:text-soul"
-                >
-                  Undo
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <RecentlyUnavailable
+        entries={recentlyUnavailable}
+        onUndo={undoUnavailable}
+      />
 
       {category === "boss" ? (
         <BossPanel onMarkUnavailable={markUnavailable} />
