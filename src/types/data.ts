@@ -30,7 +30,8 @@ export interface Item {
   id: string
   name: string
   type: ItemType
-  chapter: 1 | 2 | 3 | 4 | 5
+  /** null = chapter unknown/uncertain — such items pass every chapter filter. */
+  chapter: 1 | 2 | 3 | 4 | 5 | null
   stats: Stats
   equippableBy: "all" | string[]
   excludedFrom: string[]

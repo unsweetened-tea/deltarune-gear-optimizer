@@ -37,7 +37,9 @@ export function isAvailable(
 ): boolean {
   // Permanent exclusion applies in every mode — even unlimited/theorycraft.
   if (item.excludeFromOptimizer === true) return false
-  if (!chaptersEnabled.includes(item.chapter)) return false
+  // Unknown chapter (null) is never filtered out by chapter selection.
+  if (item.chapter !== null && !chaptersEnabled.includes(item.chapter))
+    return false
   if (inventoryMode === "owned" && item.owned <= 0) return false
   return true
 }

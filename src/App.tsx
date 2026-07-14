@@ -1,6 +1,14 @@
 import { useRef, useState } from "react"
 import { useDataset } from "./hooks/useDataset"
 import { downloadDataset, readDatasetFile } from "./lib/exportImport"
+import {
+  appliedSeedVersion,
+  bundledSeedVersion,
+  dismissSeedNote,
+  isSeedNoteDismissed,
+  loadSeedDataset,
+  markSeedApplied,
+} from "./lib/storage"
 import { ImportPanel } from "./components/ImportPanel"
 import { ItemsPanel } from "./components/ItemsPanel"
 import { CharactersPanel } from "./components/CharactersPanel"
@@ -23,11 +31,39 @@ function App() {
   const { dataset, setDataset } = useDataset()
   const [tab, setTab] = useState<Tab>("optimize")
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showSeedNote, setShowSeedNote] = useState(() => {
+    const applied = appliedSeedVersion()
+    return (
+      applied !== null &&
+      bundledSeedVersion > applied &&
+      !isSeedNoteDismissed()
+    )
+  })
 
   const visibleTabs = TABS.filter((t) => !t.devOnly || import.meta.env.DEV)
 
   const handleImportClick = () => {
     fileInputRef.current?.click()
+  }
+
+  const handleReset = () => {
+    const seed = loadSeedDataset()
+    if (!seed) {
+      alert("The bundled default data failed to load — reset unavailable.")
+      return
+    }
+    const confirmed = confirm(
+      "Reset to default data?\n\nThis replaces your ENTIRE dataset with the bundled defaults. Your owned counts, item edits, exclusions, bosses, and custom presets will be LOST.\n\nExport a JSON backup first if you want to keep them.",
+    )
+    if (!confirmed) return
+    setDataset(seed)
+    markSeedApplied(bundledSeedVersion)
+    setShowSeedNote(false)
+  }
+
+  const handleDismissSeedNote = () => {
+    dismissSeedNote()
+    setShowSeedNote(false)
   }
 
   const handleFileChange = async (
@@ -66,6 +102,14 @@ function App() {
           >
             Import JSON
           </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            title="Replace your entire dataset with the bundled defaults (asks for confirmation)"
+            className="rounded border border-warning/60 px-4 py-2 text-small font-medium text-warning hover:bg-warning/10"
+          >
+            Reset to default data
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -75,6 +119,24 @@ function App() {
           />
         </div>
       </header>
+
+      {showSeedNote && (
+        <p className="mt-4 flex items-center gap-3 rounded-card border border-border bg-surface-2 p-3 text-small text-on-surface-2">
+          <span>
+            A newer default dataset (v{bundledSeedVersion}) is bundled with
+            this build. Your saved data was kept as-is — use{" "}
+            <span className="font-medium">Reset to default data</span> to load
+            it (your edits would be lost).
+          </span>
+          <button
+            type="button"
+            onClick={handleDismissSeedNote}
+            className="ml-auto rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:bg-surface"
+          >
+            Dismiss
+          </button>
+        </p>
+      )}
 
       <nav className="mt-6 flex gap-1 border-b border-border">
         {visibleTabs.map((t) => (

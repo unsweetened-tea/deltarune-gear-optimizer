@@ -1,0 +1,1725 @@
+{
+  "version": 1,
+  "characters": [
+    {
+      "id": "kris",
+      "name": "Kris",
+      "baseStats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "level": null,
+      "slots": {
+        "weapon": 1,
+        "armor": 2
+      },
+      "armorRemovable": true,
+      "active": true
+    },
+    {
+      "id": "susie",
+      "name": "Susie",
+      "baseStats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "level": null,
+      "slots": {
+        "weapon": 1,
+        "armor": 2
+      },
+      "armorRemovable": false,
+      "active": true
+    },
+    {
+      "id": "ralsei",
+      "name": "Ralsei",
+      "baseStats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "level": null,
+      "slots": {
+        "weapon": 1,
+        "armor": 2
+      },
+      "armorRemovable": true,
+      "active": true
+    },
+    {
+      "id": "noelle",
+      "name": "Noelle",
+      "baseStats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "level": null,
+      "slots": {
+        "weapon": 1,
+        "armor": 2
+      },
+      "armorRemovable": true,
+      "active": false
+    }
+  ],
+  "settings": {
+    "chaptersEnabled": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "inventoryMode": "owned"
+  },
+  "items": [
+    {
+      "id": "wood-blade",
+      "name": "Wood Blade",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Default (Kris)"
+    },
+    {
+      "id": "bounce-blade",
+      "name": "Bounce Blade",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Defense",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Cyber City"
+    },
+    {
+      "id": "spookysword",
+      "name": "Spookysword",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Spookiness UP",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Seam"
+    },
+    {
+      "id": "mecha-saber",
+      "name": "Mecha Saber",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Annoying",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Sweet Cap'n Cakes"
+    },
+    {
+      "id": "saber10",
+      "name": "Saber10",
+      "type": "weapon",
+      "chapter": 3,
+      "stats": {
+        "hp": 0,
+        "atk": 6,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "S-Rank vending machine (80 PTs)"
+    },
+    {
+      "id": "jingle-blade",
+      "name": "Jingle Blade",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 7,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Festive",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Holiday Manor (Holiday Pencil) — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "winglade",
+      "name": "Winglade",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 8,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ +5%",
+        "description": "Increases Dark Dollars earned by 5%."
+      },
+      "owned": 1,
+      "source": "Dark Sanctuary chest (Climbing Claws) — likely Ch4, VERIFY"
+    },
+    {
+      "id": "black-shard",
+      "name": "Black Shard",
+      "type": "weapon",
+      "chapter": 3,
+      "stats": {
+        "hp": 0,
+        "atk": 16,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "SlayDark",
+        "description": "Deals extra damage to Dark-type enemies (Titan, Titan Spawn)."
+      },
+      "owned": 1,
+      "source": "Defeating the Roaring Knight"
+    },
+    {
+      "id": "trefoil",
+      "name": "Trefoil",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ +5%",
+        "description": "Increases Dark Dollars found by 5%."
+      },
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "twisted-sword",
+      "name": "Twisted Sword",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 16,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Trance",
+        "description": "Non-functional on this item. Currently unobtainable."
+      },
+      "owned": 0,
+      "source": "Malius (unobtainable)",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "broken-sword",
+      "name": "Broken Sword",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Failure",
+        "description": "Cannot be equipped by anyone."
+      },
+      "owned": 0,
+      "source": "Spamton (random 50-150 D$)",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "mane-ax",
+      "name": "Mane Ax",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Default (Susie)"
+    },
+    {
+      "id": "brave-ax",
+      "name": "Brave Ax",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Guts UP",
+        "description": "Does not increase Susie's Guts stat."
+      },
+      "owned": 1,
+      "source": "Rouxls Kaard (150 D$)"
+    },
+    {
+      "id": "auto-axe",
+      "name": "Auto Axe",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "BadIdea",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Sweet Cap'n Cakes (250 D$)"
+    },
+    {
+      "id": "devilsknife",
+      "name": "Devilsknife",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 5,
+        "def": 0,
+        "magic": 4
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Buster TP DOWN",
+        "description": "Reduces Susie's Rude Buster TP cost by 10%."
+      },
+      "owned": 1,
+      "source": "Jevil"
+    },
+    {
+      "id": "toxic-axe",
+      "name": "Toxic Axe",
+      "type": "weapon",
+      "chapter": 3,
+      "stats": {
+        "hp": 0,
+        "atk": 6,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Vending machine (80 PTs)"
+    },
+    {
+      "id": "absorbax",
+      "name": "AbsorbAx",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 8,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Vampire",
+        "description": "Recovers HP when attacking."
+      },
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "justice-axe",
+      "name": "Justice Axe",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 12,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "???",
+        "description": "No mechanical special power."
+      },
+      "owned": 1,
+      "source": "Gerson Boom — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "red-scarf",
+      "name": "Red Scarf",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Default (Ralsei)"
+    },
+    {
+      "id": "ragger",
+      "name": "Ragger",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Forest"
+    },
+    {
+      "id": "dainty-scarf",
+      "name": "Dainty Scarf",
+      "type": "weapon",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 2
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Fluffiness UP",
+        "description": "Raises Ralsei's Fluffiness stat in Chapter 1."
+      },
+      "owned": 1,
+      "source": "Rouxls Kaard (200 D$)"
+    },
+    {
+      "id": "fiber-scarf",
+      "name": "Fiber Scarf",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 0,
+        "magic": 2
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "ATK becomes +3 in Chapter 3."
+      },
+      "owned": 1,
+      "source": "Cyber Field (Nubert's treasure)"
+    },
+    {
+      "id": "flex-scarf",
+      "name": "Flex Scarf",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 1
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "scarf-mark",
+      "name": "Scarf Mark",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 1,
+        "magic": 1
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "ragger2",
+      "name": "Ragger2",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 5,
+        "def": 0,
+        "magic": -1
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Prickly",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Cyber Field"
+    },
+    {
+      "id": "puppet-scarf",
+      "name": "Puppet Scarf",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 10,
+        "def": 0,
+        "magic": -6
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Spamton NEO"
+    },
+    {
+      "id": "cheer-scarf",
+      "name": "Cheer Scarf",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 0,
+        "magic": 2
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Smiley",
+        "description": "Gains more TP from criticals."
+      },
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "snow-ring",
+      "name": "Snow Ring",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "noelle"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Default (Noelle)"
+    },
+    {
+      "id": "freeze-ring",
+      "name": "Freeze Ring",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 4
+      },
+      "equippableBy": [
+        "noelle"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Addison (Weird Route)"
+    },
+    {
+      "id": "thorn-ring",
+      "name": "Thorn Ring",
+      "type": "weapon",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 14,
+        "def": 0,
+        "magic": 12
+      },
+      "equippableBy": [
+        "noelle"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Trance",
+        "description": "Drains HP to 1/3 max in battle; halves TP cost of Noelle's ice spells."
+      },
+      "owned": 1,
+      "source": "Spamton (Weird Route, 1997 D$)"
+    },
+    {
+      "id": "everybody-weapon",
+      "name": "Everybody Weapon",
+      "type": "weapon",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 12,
+        "def": 6,
+        "magic": 8
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "amber-card",
+      "name": "Amber Card",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Seam / Rouxls Kaard (100 D$)"
+    },
+    {
+      "id": "white-ribbon",
+      "name": "White Ribbon",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [
+        "susie"
+      ],
+      "ability": {
+        "name": "Cuteness",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "Field"
+    },
+    {
+      "id": "dice-brace",
+      "name": "Dice Brace",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Forest"
+    },
+    {
+      "id": "iron-shackle",
+      "name": "Iron Shackle",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Card Castle (Prison 1B)"
+    },
+    {
+      "id": "jevilstail",
+      "name": "Jevilstail",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 2,
+        "magic": 2
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Jevil"
+    },
+    {
+      "id": "glow-wrist",
+      "name": "Glow Wrist",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Cyber Field (200 D$)"
+    },
+    {
+      "id": "chain-mail",
+      "name": "Chain Mail",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 3,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Queen's Mansion"
+    },
+    {
+      "id": "royal-pin",
+      "name": "Royal Pin",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 3,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Default (Noelle) / Swatch (1000 D$)"
+    },
+    {
+      "id": "b-shotbowtie",
+      "name": "B.ShotBowtie",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Swatch (300 D$)"
+    },
+    {
+      "id": "pink-ribbon",
+      "name": "Pink Ribbon",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "GrazeArea",
+        "description": "Increases graze area by 44%. Post-Chapter 3: -20% TP gain."
+      },
+      "owned": 1,
+      "source": "Cyber City"
+    },
+    {
+      "id": "mannequin",
+      "name": "Mannequin",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "resistances": [
+        {
+          "element": "puppetCat",
+          "percent": 35,
+          "chapterOverrides": {
+            "5": 20
+          }
+        }
+      ],
+      "owned": 1,
+      "source": "Cyber City (300 D$, Kris only)"
+    },
+    {
+      "id": "frayed-bowtie",
+      "name": "Frayed Bowtie",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 1,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "resistances": [
+        {
+          "element": "puppetCat",
+          "percent": 15
+        }
+      ],
+      "owned": 1,
+      "source": "Spamton (random 50-150 D$)"
+    },
+    {
+      "id": "dealmaker",
+      "name": "Dealmaker",
+      "type": "armor",
+      "chapter": 2,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 5,
+        "magic": 5
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ +30%",
+        "description": "Increases Dark Dollars earned by 30%."
+      },
+      "resistances": [
+        {
+          "element": "puppetCat",
+          "percent": 40
+        }
+      ],
+      "owned": 1,
+      "source": "Spamton NEO"
+    },
+    {
+      "id": "tennatie",
+      "name": "TennaTie",
+      "type": "armor",
+      "chapter": 3,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 5,
+        "magic": -2
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Gotcha machine (Tenna)"
+    },
+    {
+      "id": "shadow-mantle",
+      "name": "Shadow Mantle",
+      "type": "armor",
+      "chapter": 3,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "DEF gains +1 per chapter completed on the current file."
+      },
+      "resistances": [
+        {
+          "element": "darkStar",
+          "percent": 66
+        }
+      ],
+      "owned": 1,
+      "source": "Chapter 3 Sword Route (Shadow Mantle Holder)"
+    },
+    {
+      "id": "silver-watch",
+      "name": "Silver Watch",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "GrazeTime",
+        "description": "Grazing reduces turn length by 10% more."
+      },
+      "owned": 1,
+      "source": "Noelle — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "silver-card",
+      "name": "Silver Card",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ +5%",
+        "description": "Increases Dark Dollars earned by 5%."
+      },
+      "owned": 1,
+      "source": "Malius — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "twin-ribbon",
+      "name": "Twin Ribbon",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 3,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "GrazeArea",
+        "description": "Increases graze area by 56.25%. Post-Chapter 3: -25% TP gain."
+      },
+      "owned": 1,
+      "source": "Malius — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "spike-band",
+      "name": "Spike Band",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Malius — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "spike-shackle",
+      "name": "Spike Shackle",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 3,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Malius — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "tension-bow",
+      "name": "Tension Bow",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "TPGain",
+        "description": "Gain 10% more TP from grazing."
+      },
+      "owned": 1,
+      "source": "Malius — CHAPTER UNCERTAIN"
+    },
+    {
+      "id": "lodestone",
+      "name": "LodeStone",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "TPGain",
+        "description": "Increases TP gain by 5%."
+      },
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "ginger-guard",
+      "name": "Ginger Guard",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 3,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "waferguard",
+      "name": "Waferguard",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 4,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "princessrbn",
+      "name": "PrincessRBN",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 4,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "Elegance UP",
+        "description": "Aesthetic ability."
+      },
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "goldwidow",
+      "name": "GoldWidow",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 5,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ -10%",
+        "description": "Reduces Dark Dollars gained by 10%."
+      },
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "powerband",
+      "name": "PowerBand",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "mysticband",
+      "name": "MysticBand",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 4
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "blue-ribbon",
+      "name": "Blue Ribbon",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "Healing UP",
+        "description": "Increases healing done by the wearer by 12.5%."
+      },
+      "owned": 1,
+      "source": "— (unlisted)"
+    },
+    {
+      "id": "mouse-token",
+      "name": "Mouse Token",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 2
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "sky-mantle",
+      "name": "Sky Mantle",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 1,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "resistances": [
+        {
+          "element": "elecHoly",
+          "percent": 50
+        }
+      ],
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "dark-gold-band",
+      "name": "Dark Gold Band",
+      "type": "armor",
+      "chapter": null,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Unused",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "aquaknife",
+      "name": "AquaKnife",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 10,
+        "def": 2,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Increases the chance of landing Critical Hits."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "blueshoes",
+      "name": "BlueShoes",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 4,
+        "magic": 6
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Ralsei's Pacify costs 0 TP."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "floweryscarf",
+      "name": "FloweryScarf",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 70,
+        "def": 70,
+        "magic": 70
+      },
+      "equippableBy": [],
+      "excludedFrom": [
+        "ralsei"
+      ],
+      "ability": {
+        "name": null,
+        "description": "Ralsei refuses to wear it, so it cannot actually be equipped by anyone."
+      },
+      "owned": 0,
+      "source": "Flowery (1 F$, after buying 3 flower items)",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "sethspecs",
+      "name": "SethSpecs",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 4,
+        "magic": 6
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Longer invulnerability window after taking damage."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "yellowhat",
+      "name": "YellowHat",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 4,
+        "magic": 4
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Spells deal 20% more damage."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "o-glove",
+      "name": "O.Glove",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 4,
+        "def": 8,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Reduces TP cost of Susie's Scythemare."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "greenapron",
+      "name": "GreenApron",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 7,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Recover 16% Max HP when defending."
+      },
+      "owned": 1,
+      "source": "Flower items (Pink, 100 F$ + 3 Pink Coins)"
+    },
+    {
+      "id": "truetie",
+      "name": "TrueTie",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 1,
+        "def": 5,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "CatDefend",
+        "description": "Reduces Puppet/Cat damage by 20%."
+      },
+      "owned": 1,
+      "source": "Fuse FrayedBowtie + TennaTie (Ch5)",
+      "resistances": [
+        {
+          "element": "puppetCat",
+          "percent": 20
+        }
+      ]
+    },
+    {
+      "id": "netskiehat",
+      "name": "NetskieHat",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 6,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": null,
+        "description": "Can wear more than one (stacks); set owned to 2 if you have two."
+      },
+      "owned": 1,
+      "source": "Garden / Cliffs / Pink's shop 1500 D$ (Ch5)"
+    },
+    {
+      "id": "woodblade2",
+      "name": "WoodBlade2",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 10,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Coolness",
+        "description": "Aesthetic."
+      },
+      "owned": 1,
+      "source": "Pink's Shop, Cliffs (Ch5)"
+    },
+    {
+      "id": "thatchet",
+      "name": "Thatchet",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 10,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "susie"
+      ],
+      "excludedFrom": [],
+      "ability": {
+        "name": "Wicked",
+        "description": "Aesthetic."
+      },
+      "owned": 1,
+      "source": "Garden, golden watering can subarea (Ch5)"
+    },
+    {
+      "id": "mistlewp",
+      "name": "MistleWP",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 6,
+        "def": 0,
+        "magic": 2
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Cliffs chest (Ch5)"
+    },
+    {
+      "id": "gildedrose",
+      "name": "GildedRose",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 16,
+        "def": 0,
+        "magic": 2
+      },
+      "equippableBy": [
+        "noelle"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Unused - no in-game way to obtain (possibly Ch6)",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "brokenscarf",
+      "name": "BrokenScarf",
+      "type": "weapon",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 12,
+        "def": 3,
+        "magic": 3
+      },
+      "equippableBy": [
+        "ralsei"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Obtained end of Ch5 (Flowery slain); Ralsei NOT in party afterward - cannot be equipped in current game",
+      "excludeFromOptimizer": true
+    },
+    {
+      "id": "redribbon",
+      "name": "RedRibbon",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 4,
+        "magic": 1
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 1,
+      "source": "Garden chest / Flower Kingdom diners (Ch5)"
+    },
+    {
+      "id": "monarchrbn",
+      "name": "MonarchRBN",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 6,
+        "magic": 2
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "HasAntenna",
+        "description": "Increases outgoing healing by 12.5%."
+      },
+      "owned": 1,
+      "source": "Fuse ScarfMark + PrincessRBN, Castle Town (Ch5)"
+    },
+    {
+      "id": "dogwidow",
+      "name": "DogWidow",
+      "type": "armor",
+      "chapter": 5,
+      "stats": {
+        "hp": 0,
+        "atk": 0,
+        "def": 6,
+        "magic": 0
+      },
+      "equippableBy": "all",
+      "excludedFrom": [],
+      "ability": {
+        "name": "$ -90%",
+        "description": "Reduces Dark Dollars earned by 90%."
+      },
+      "owned": 1,
+      "source": "Fuse GoldWidow + DogDollar via Malius, Castle Town (Ch5)"
+    },
+    {
+      "id": "bandage",
+      "name": "Bandage",
+      "type": "armor",
+      "chapter": 1,
+      "stats": {
+        "hp": 1,
+        "atk": 0,
+        "def": 0,
+        "magic": 0
+      },
+      "equippableBy": [
+        "kris"
+      ],
+      "excludedFrom": [],
+      "ability": null,
+      "owned": 0,
+      "source": "Light World default armor (+1HP); cannot be unequipped - not Dark World gear",
+      "excludeFromOptimizer": true
+    }
+  ]
+}

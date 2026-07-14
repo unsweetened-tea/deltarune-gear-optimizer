@@ -199,19 +199,19 @@ export function ItemsPanel() {
                 </td>
                 <td className="p-1">
                   <select
-                    value={item.chapter}
+                    value={item.chapter === null ? "" : String(item.chapter)}
                     onChange={(e) =>
                       updateItem(item.id, {
-                        chapter: Number(e.target.value) as
-                          | 1
-                          | 2
-                          | 3
-                          | 4
-                          | 5,
+                        chapter:
+                          e.target.value === ""
+                            ? null
+                            : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
                       })
                     }
                     className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
+                    title="? = chapter unknown — passes every chapter filter"
                   >
+                    <option value="">?</option>
                     {[1, 2, 3, 4, 5].map((c) => (
                       <option key={c} value={c}>
                         {c}

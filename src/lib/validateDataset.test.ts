@@ -124,3 +124,48 @@ describe("parseDataset migration", () => {
     ).toBeNull()
   })
 })
+
+describe("bundled seed dataset (src/data/gearData.json)", () => {
+  it("parses, migrates, and keeps every item including unknown-chapter ones", async () => {
+    const { default: gearData } = await import("../data/gearData.json")
+    const seed = parseDataset(gearData)
+    expect(seed).not.toBeNull()
+    if (!seed) return
+    expect(seed.version).toBe(DATASET_VERSION)
+    expect(seed.characters.map((c) => c.id)).toEqual([
+      "kris",
+      "susie",
+      "ralsei",
+      "noelle",
+    ])
+    expect(seed.items).toHaveLength(gearData.items.length)
+    // Unknown chapters survive as null instead of being rejected.
+    expect(seed.items.some((it) => it.chapter === null)).toBe(true)
+    // Migration seeds the built-in presets and an empty boss list.
+    expect(seed.presets.length).toBeGreaterThan(0)
+    expect(seed.bosses).toEqual([])
+  })
+
+  it("yields the expected optimizer pool: owned >= 1 and not excluded", async () => {
+    const { default: gearData } = await import("../data/gearData.json")
+    const { isAvailable } = await import("./optimizer")
+    const seed = parseDataset(gearData)
+    expect(seed).not.toBeNull()
+    if (!seed) return
+    const pool = seed.items.filter((it) =>
+      isAvailable(it, [1, 2, 3, 4, 5], "owned"),
+    )
+    const expected = seed.items.filter(
+      (it) => it.owned >= 1 && it.excludeFromOptimizer !== true,
+    )
+    expect(pool.map((i) => i.id).sort()).toEqual(
+      expected.map((i) => i.id).sort(),
+    )
+    expect(pool.length).toBeGreaterThan(0)
+    // Unknown-chapter items pass even a narrowed chapter filter.
+    const narrowed = seed.items.filter((it) => isAvailable(it, [2], "owned"))
+    for (const it of narrowed) {
+      expect(it.chapter === null || it.chapter === 2).toBe(true)
+    }
+  })
+})
