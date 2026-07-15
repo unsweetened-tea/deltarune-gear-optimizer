@@ -5,6 +5,7 @@ import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimize, type ScoredLoadout } from "../lib/optimizer"
 import { STAT_BORDER_CLASS, STAT_TEXT_CLASS } from "../lib/statColors"
 import { RecentlyUnavailable } from "./RecentlyUnavailable"
+import { MarkUnavailableButton } from "./ui/DestructiveButtons"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -169,13 +170,9 @@ export function OptimizerPanel() {
                   <span className="text-text-muted">Weapon:</span>{" "}
                   {best.weapon.name}
                 </span>
-                <button
-                  type="button"
+                <MarkUnavailableButton
                   onClick={() => markUnavailable(best.weapon)}
-                  className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                >
-                  I don&apos;t have this
-                </button>
+                />
               </li>
               {best.armor.length === 0 && (
                 <li className="text-text-muted">Armor: (no armor)</li>
@@ -186,13 +183,9 @@ export function OptimizerPanel() {
                     <span className="text-text-muted">Armor:</span>{" "}
                     {piece.name}
                   </span>
-                  <button
-                    type="button"
+                  <MarkUnavailableButton
                     onClick={() => markUnavailable(piece)}
-                    className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                  >
-                    I don&apos;t have this
-                  </button>
+                  />
                 </li>
               ))}
             </ul>

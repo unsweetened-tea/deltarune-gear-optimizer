@@ -16,6 +16,7 @@ import { OptimizerPanel } from "./components/OptimizerPanel"
 import { OptimizeScreen } from "./components/OptimizeScreen"
 import { StylePanel } from "./components/StylePanel"
 import { PrimaryNav } from "./components/PrimaryNav"
+import { Button } from "./components/ui/Button"
 
 type Tab = "optimize" | "solo" | "import" | "items" | "characters" | "style"
 
@@ -108,41 +109,33 @@ function App() {
               <span className="font-medium">Reset to default data</span> to
               load it (your edits would be lost).
             </span>
-            <button
-              type="button"
+            <Button
+              variant="neutral"
+              size="sm"
               onClick={handleDismissSeedNote}
-              className="ml-auto shrink-0 rounded border border-border px-2 py-0.5 text-small text-on-surface-2 hover:bg-surface"
+              className="ml-auto shrink-0"
             >
               Dismiss
-            </button>
+            </Button>
           </p>
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="font-display text-h1 text-on-void">{currentLabel}</h1>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => downloadDataset(dataset)}
-              className="rounded bg-soul px-4 py-2 text-small font-medium text-on-soul hover:bg-soul/90"
-            >
+            <Button variant="primary" onClick={() => downloadDataset(dataset)}>
               Export JSON
-            </button>
-            <button
-              type="button"
-              onClick={handleImportClick}
-              className="rounded border border-soul px-4 py-2 text-small font-medium text-soul hover:bg-soul/10"
-            >
+            </Button>
+            <Button variant="secondary" onClick={handleImportClick}>
               Import JSON
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="warning"
               onClick={handleReset}
               title="Replace your entire dataset with the bundled defaults (asks for confirmation)"
-              className="rounded border border-warning/60 px-4 py-2 text-small font-medium text-warning hover:bg-warning/10"
             >
               Reset to default data
-            </button>
+            </Button>
             <input
               ref={fileInputRef}
               type="file"

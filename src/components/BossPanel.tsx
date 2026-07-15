@@ -13,6 +13,7 @@ import { ELEMENT_LABELS, ELEMENTS } from "../lib/resistanceFormat"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { slugify, uniqueSlug } from "../lib/slug"
 import { SoulHeart } from "./SoulHeart"
+import { MarkUnavailableButton } from "./ui/DestructiveButtons"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 const PROFILE_KEYS: (Exclude<Element, "all"> | "neutral")[] = [
@@ -244,13 +245,9 @@ export function BossPanel({
                           <span className="text-text-muted">Weapon:</span>{" "}
                           {a.weapon.name}
                         </span>
-                        <button
-                          type="button"
+                        <MarkUnavailableButton
                           onClick={() => onMarkUnavailable(a.weapon)}
-                          className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                        >
-                          I don&apos;t have this
-                        </button>
+                        />
                       </li>
                       {a.armor.map((piece, i) => (
                         <li key={i} className="flex items-center gap-2">
@@ -258,13 +255,9 @@ export function BossPanel({
                             <span className="text-text-muted">Armor:</span>{" "}
                             {piece.name}
                           </span>
-                          <button
-                            type="button"
+                          <MarkUnavailableButton
                             onClick={() => onMarkUnavailable(piece)}
-                            className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                          >
-                            I don&apos;t have this
-                          </button>
+                          />
                         </li>
                       ))}
                       {a.armor.length === 0 && (

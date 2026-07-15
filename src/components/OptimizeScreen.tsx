@@ -14,6 +14,11 @@ import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { BossPanel } from "./BossPanel"
 import { RecentlyUnavailable } from "./RecentlyUnavailable"
 import { SoulHeart } from "./SoulHeart"
+import { Button } from "./ui/Button"
+import {
+  MarkUnavailableButton,
+  RemoveButton,
+} from "./ui/DestructiveButtons"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -339,21 +344,13 @@ export function OptimizeScreen() {
                         <span className="text-text-muted">Weapon:</span>{" "}
                         {a.weapon.name}
                       </span>
-                      <button
-                        type="button"
+                      <RemoveButton
                         disabled
-                        title="A weapon slot can never be empty."
-                        className="cursor-not-allowed rounded border border-border px-2 py-0.5 text-small text-text-muted opacity-40"
-                      >
-                        Remove
-                      </button>
-                      <button
-                        type="button"
+                        disabledReason="A weapon slot can never be empty."
+                      />
+                      <MarkUnavailableButton
                         onClick={() => markUnavailable(a.weapon)}
-                        className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                      >
-                        I don&apos;t have this
-                      </button>
+                      />
                     </li>
                     {a.armor.map((piece, i) => (
                       <li key={i} className="flex items-center gap-2">
@@ -361,30 +358,14 @@ export function OptimizeScreen() {
                           <span className="text-text-muted">Armor:</span>{" "}
                           {piece.name}
                         </span>
-                        <button
-                          type="button"
+                        <RemoveButton
                           disabled={lastArmorProtected}
-                          title={
-                            lastArmorProtected
-                              ? `${a.character.name} can't unequip armor (armor is not removable) — this is their last armor slot.`
-                              : "Lock this slot empty for this build and re-optimize."
-                          }
+                          disabledReason={`${a.character.name} can't unequip armor (armor is not removable) — this is their last armor slot.`}
                           onClick={() => lockSlot(a.character.id)}
-                          className={
-                            lastArmorProtected
-                              ? "cursor-not-allowed rounded border border-border px-2 py-0.5 text-small text-text-muted opacity-40"
-                              : "rounded border border-border px-2 py-0.5 text-small text-on-surface hover:bg-surface-2"
-                          }
-                        >
-                          Remove
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <MarkUnavailableButton
                           onClick={() => markUnavailable(piece)}
-                          className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-                        >
-                          I don&apos;t have this
-                        </button>
+                        />
                       </li>
                     ))}
                     {Array.from({ length: locked }, (_, i) => (
@@ -395,13 +376,14 @@ export function OptimizeScreen() {
                   </ul>
 
                   {locked > 0 && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="neutral"
+                      size="sm"
                       onClick={() => resetLocks(a.character.id)}
-                      className="mt-2 rounded border border-border px-2 py-0.5 text-small text-on-surface hover:bg-surface-2"
+                      className="mt-2"
                     >
                       Unlock {locked} slot(s)
-                    </button>
+                    </Button>
                   )}
 
                   <div className="mt-3 flex gap-2">
