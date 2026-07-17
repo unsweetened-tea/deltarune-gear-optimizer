@@ -10,12 +10,13 @@ import { useDataset } from "../hooks/useDataset"
 import { optimizeVsBoss } from "../lib/bossOptimizer"
 import { seedSpecialRulesFor } from "../lib/bossRules"
 import { ELEMENT_LABELS, ELEMENTS } from "../lib/resistanceFormat"
-import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { slugify, uniqueSlug } from "../lib/slug"
 import { SoulHeart } from "./SoulHeart"
 import { MarkUnavailableButton } from "./ui/DestructiveButtons"
+import { Card } from "./ui/Card"
+import { SlotRow } from "./results/SlotRow"
+import { StatBlock } from "./results/StatBlock"
 
-const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 const PROFILE_KEYS: (Exclude<Element, "all"> | "neutral")[] = [
   ...ELEMENTS,
   "neutral",
@@ -218,153 +219,129 @@ export function BossPanel({
             </p>
           ) : result?.ok ? (
             <>
+              {result.assignments.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <SoulHeart className="h-4 w-4 text-soul" />
+                  <h2 className="font-display text-h1 text-on-void">
+                    Recommended counter-gear
+                  </h2>
+                </div>
+              ) : (
+                <h2 className="font-display text-h1 text-on-void">
+                  No counter-gear available
+                </h2>
+              )}
+
               <div className="grid gap-4 md:grid-cols-2">
                 {result.assignments.map((a) => (
-                  <div
-                    key={a.character.id}
-                    className="rounded-card border border-border bg-surface p-4 text-on-surface"
-                  >
+                  <Card key={a.character.id} className="space-y-3">
                     <div className="flex items-baseline justify-between">
                       <h3 className="font-display text-h2">
                         {a.character.name}
                       </h3>
                       <span
-                        className="font-mono text-h2 font-bold"
+                        className="text-small text-text-muted"
                         title="Elemental damage multiplier incl. special rules — 1.00 means unresisted"
                       >
-                        ×{a.damageMultiplier.toFixed(2)}
+                        ×
+                        <span className="font-mono text-mono font-bold text-on-surface">
+                          {a.damageMultiplier.toFixed(2)}
+                        </span>{" "}
+                        dmg
                       </span>
                     </div>
                     <p className="text-small text-text-muted">
-                      takes ~{Math.round(a.perHit)} per nominal 100 hit
+                      ~{Math.round(a.perHit)} taken per nominal 100 hit
                     </p>
 
-                    <ul className="mt-2 space-y-1 text-small">
-                      <li className="flex items-center gap-2">
-                        <span>
-                          <span className="text-text-muted">Weapon:</span>{" "}
-                          {a.weapon.name}
-                        </span>
-                        <MarkUnavailableButton
-                          onClick={() => onMarkUnavailable(a.weapon)}
-                        />
-                      </li>
-                      {a.armor.map((piece, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <span>
-                            <span className="text-text-muted">Armor:</span>{" "}
-                            {piece.name}
-                          </span>
+                    <div className="space-y-2">
+                      <SlotRow
+                        slotLabel="Weapon"
+                        item={a.weapon}
+                        actions={
                           <MarkUnavailableButton
-                            onClick={() => onMarkUnavailable(piece)}
+                            onClick={() => onMarkUnavailable(a.weapon)}
                           />
-                        </li>
+                        }
+                      />
+                      {a.armor.map((piece, i) => (
+                        <SlotRow
+                          key={i}
+                          slotLabel="Armor"
+                          item={piece}
+                          note={
+                            a.why.find((w) => w.itemName === piece.name)?.text
+                          }
+                          actions={
+                            <MarkUnavailableButton
+                              onClick={() => onMarkUnavailable(piece)}
+                            />
+                          }
+                        />
                       ))}
-                      {a.armor.length === 0 && (
-                        <li className="text-text-muted">Armor: (none)</li>
-                      )}
-                    </ul>
-
-                    {a.why.length > 0 && (
-                      <ul className="mt-2 space-y-1 rounded-card border border-border bg-surface-2 p-2 text-small text-on-surface-2">
-                        {a.why.map((w, i) => (
-                          <li key={i}>
-                            <span className="font-medium">{w.itemName}:</span>{" "}
-                            {w.text}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="mt-3 flex gap-2">
-                      {STAT_KEYS.map((stat) => (
-                        <div
-                          key={stat}
-                          className="rounded bg-surface-2 px-2 py-1 text-center text-on-surface-2"
-                        >
-                          <div
-                            className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
-                          >
-                            {stat}
-                          </div>
-                          <div
-                            className={`font-mono text-mono font-bold ${STAT_TEXT_CLASS[stat]}`}
-                          >
-                            {a.totals[stat]}
-                          </div>
-                        </div>
-                      ))}
+                      {a.armor.length === 0 && <SlotRow slotLabel="Armor" />}
                     </div>
-                  </div>
+
+                    <StatBlock totals={a.totals} />
+                  </Card>
                 ))}
                 {result.blocked.map((b) => (
-                  <div
-                    key={b.character.id}
-                    className="rounded-card border border-warning/60 bg-surface p-4 text-on-surface"
-                  >
-                    <h3 className="font-display text-h2">
-                      {b.character.name}
-                    </h3>
-                    <ul className="mt-2 space-y-1 text-small">
-                      <li>
-                        <span className="text-text-muted">
-                          {b.reason.toLowerCase().includes("weapon")
-                            ? "Weapon:"
-                            : "Armor:"}
-                        </span>{" "}
-                        <span className="text-warning">(none available)</span>
-                      </li>
-                    </ul>
-                    <p className="mt-2 text-small text-warning">{b.reason}</p>
-                  </div>
+                  <Card key={b.character.id} tone="warning" className="space-y-2">
+                    <h3 className="font-display text-h2">{b.character.name}</h3>
+                    <div className="rounded border border-dashed border-warning/50 px-3 py-2">
+                      <div className="text-small uppercase tracking-wide text-text-muted">
+                        {b.reason.toLowerCase().includes("weapon")
+                          ? "Weapon"
+                          : "Armor"}
+                      </div>
+                      <div className="text-small text-warning">
+                        none available
+                      </div>
+                    </div>
+                    <p className="text-small text-warning">{b.reason}</p>
+                  </Card>
                 ))}
               </div>
 
               <div>
-                <h3 className="mb-2 font-display text-h2 text-on-void">
+                <h3 className="font-display text-h2 text-on-void">
                   Items considered
                 </h3>
-                <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
-                  <table className="min-w-full text-small">
-                    <thead className="bg-surface-2 text-on-surface-2">
-                      <tr>
-                        <th className="p-2 text-left">Item</th>
-                        <th className="p-2 text-left">Verdict</th>
-                        <th className="p-2 text-left">Why</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...result.verdicts]
-                        .sort(
-                          (a, b) =>
-                            Number(b.used) - Number(a.used) ||
-                            a.item.name.localeCompare(b.item.name),
-                        )
-                        .map((v) => (
-                          <tr
-                            key={v.item.id}
-                            className="odd:bg-surface even:bg-surface-2"
-                          >
-                            <td className="p-2">{v.item.name}</td>
-                            <td className="p-2">
-                              {v.used ? (
-                                <span className="font-medium text-success">
-                                  picked — {v.usedBy}
-                                </span>
-                              ) : (
-                                <span className="text-text-muted">
-                                  rejected
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-2">
-                              {v.reasons.join("; ") || "—"}
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
+                <p className="mb-2 text-small text-text-muted">
+                  Why each candidate was picked or passed over — the rejected
+                  ones are often the real insight.
+                </p>
+                <Card padded={false} className="divide-y divide-border">
+                  {[...result.verdicts]
+                    .sort(
+                      (a, b) =>
+                        Number(b.used) - Number(a.used) ||
+                        a.item.name.localeCompare(b.item.name),
+                    )
+                    .map((v) => (
+                      <div key={v.item.id} className="px-4 py-2.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-medium text-on-surface">
+                            {v.item.name}
+                          </span>
+                          {v.used ? (
+                            <span className="shrink-0 rounded bg-surface-2 px-2 py-0.5 text-small text-success">
+                              picked · {v.usedBy}
+                            </span>
+                          ) : (
+                            <span className="shrink-0 rounded bg-surface-2 px-2 py-0.5 text-small text-text-muted">
+                              rejected
+                            </span>
+                          )}
+                        </div>
+                        {v.reasons.length > 0 && (
+                          <p className="mt-1 text-small text-on-surface">
+                            {v.reasons.join("; ")}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                </Card>
               </div>
 
               {inventoryMode === "owned" && result.leftovers.length > 0 && (

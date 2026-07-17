@@ -10,16 +10,19 @@ const TONES: Record<CardTone, string> = {
 
 export function Card({
   tone = "surface",
+  padded = true,
   className = "",
   children,
   ...rest
 }: {
   tone?: CardTone
+  /** Set false for zero-padding cards that host their own divided rows. */
+  padded?: boolean
   children: ReactNode
 } & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-card border p-4 ${TONES[tone]} ${className}`}
+      className={`overflow-hidden rounded-card border ${padded ? "p-4" : ""} ${TONES[tone]} ${className}`}
       {...rest}
     >
       {children}

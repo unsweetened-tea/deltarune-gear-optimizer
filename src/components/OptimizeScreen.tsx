@@ -19,6 +19,9 @@ import {
   MarkUnavailableButton,
   RemoveButton,
 } from "./ui/DestructiveButtons"
+import { Card } from "./ui/Card"
+import { SlotRow } from "./results/SlotRow"
+import { StatBlock } from "./results/StatBlock"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -276,18 +279,135 @@ export function OptimizeScreen() {
         </p>
       ) : result?.ok ? (
         <>
+          {result.assignments.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <SoulHeart className="h-4 w-4 text-soul" />
+              <h2 className="font-display text-h1 text-on-void">
+                Recommended loadout
+              </h2>
+            </div>
+          ) : (
+            <h2 className="font-display text-h1 text-on-void">
+              No loadouts available
+            </h2>
+          )}
+
           {result.assignments.length > 0 && (
-            <div className="rounded-card border border-soul/40 bg-surface p-4 text-small text-on-surface">
-              <span className="font-display text-h2 text-soul">
+            <p className="text-small text-text-muted">
+              <span className="font-medium text-on-void">Remove</span> empties
+              that slot for this build only (resets when you switch preset).{" "}
+              <span className="font-medium text-warning">
+                I don&apos;t have this
+              </span>{" "}
+              permanently sets the item&apos;s owned count to 0 in your
+              dataset — undo above if misclicked.
+            </p>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {result.assignments.map((a) => {
+              const original = datasetCharacter(a.character.id)
+              const locked = locks[a.character.id] ?? 0
+              const remainingSlots = (original?.slots.armor ?? 2) - locked
+              const lastArmorProtected =
+                original !== undefined &&
+                !original.armorRemovable &&
+                remainingSlots <= 1
+              return (
+                <Card key={a.character.id} className="space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="font-display text-h2">{a.character.name}</h3>
+                    <span className="text-small text-text-muted">
+                      weighted score{" "}
+                      <span className="font-mono text-mono">{a.score}</span>
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <SlotRow
+                      slotLabel="Weapon"
+                      item={a.weapon}
+                      actions={
+                        <>
+                          <RemoveButton
+                            disabled
+                            disabledReason="A weapon slot can never be empty."
+                          />
+                          <MarkUnavailableButton
+                            onClick={() => markUnavailable(a.weapon)}
+                          />
+                        </>
+                      }
+                    />
+                    {a.armor.map((piece, i) => (
+                      <SlotRow
+                        key={i}
+                        slotLabel="Armor"
+                        item={piece}
+                        actions={
+                          <>
+                            <RemoveButton
+                              disabled={lastArmorProtected}
+                              disabledReason={`${a.character.name} can't unequip armor (armor is not removable) — this is their last armor slot.`}
+                              onClick={() => lockSlot(a.character.id)}
+                            />
+                            <MarkUnavailableButton
+                              onClick={() => markUnavailable(piece)}
+                            />
+                          </>
+                        }
+                      />
+                    ))}
+                    {Array.from({ length: locked }, (_, i) => (
+                      <SlotRow key={`locked-${i}`} slotLabel="Armor" />
+                    ))}
+                  </div>
+
+                  {locked > 0 && (
+                    <Button
+                      variant="neutral"
+                      size="sm"
+                      onClick={() => resetLocks(a.character.id)}
+                    >
+                      Unlock {locked} slot(s)
+                    </Button>
+                  )}
+
+                  <StatBlock totals={a.totals} />
+                </Card>
+              )
+            })}
+            {result.blocked.map((b) => (
+              <Card key={b.character.id} tone="warning" className="space-y-2">
+                <h3 className="font-display text-h2">{b.character.name}</h3>
+                <div className="rounded border border-dashed border-warning/50 px-3 py-2">
+                  <div className="text-small uppercase tracking-wide text-text-muted">
+                    {b.reason.toLowerCase().includes("weapon")
+                      ? "Weapon"
+                      : "Armor"}
+                  </div>
+                  <div className="text-small text-warning">none available</div>
+                </div>
+                <p className="text-small text-warning">{b.reason}</p>
+              </Card>
+            ))}
+          </div>
+
+          {result.assignments.length > 0 && (
+            <Card className="text-small">
+              <span className="text-text-muted">Objective</span>{" "}
+              <span className="font-medium text-on-surface">
                 {preset.label}
               </span>
-              <span className="ml-3 text-text-muted">
+              <span className="mx-2 text-text-muted">·</span>
+              <span className="text-text-muted">
                 {objectiveLabel(preset.objective)} ·{" "}
                 {inventoryMode === "owned"
                   ? "Owned pool (shared)"
                   : "Unlimited"}
               </span>
-              <span className="ml-3 font-mono text-h2 font-bold">
+              <span className="mx-2 text-text-muted">·</span>
+              <span className="font-mono text-mono font-bold text-on-surface">
                 {result.objectiveScore}
               </span>
               {preset.objective === "maximin" && (
@@ -301,151 +421,8 @@ export function OptimizeScreen() {
                   )
                 </span>
               )}
-            </div>
+            </Card>
           )}
-
-          <p className="text-small text-text-muted">
-            <span className="font-medium text-on-void">Remove</span> empties
-            that slot for this build only (resets when you switch preset).{" "}
-            <span className="font-medium text-on-void">
-              I don&apos;t have this
-            </span>{" "}
-            permanently sets the item&apos;s owned count to 0 in your dataset
-            — undo above if misclicked.
-          </p>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {result.assignments.map((a) => {
-              const original = datasetCharacter(a.character.id)
-              const locked = locks[a.character.id] ?? 0
-              const remainingSlots = (original?.slots.armor ?? 2) - locked
-              const lastArmorProtected =
-                original !== undefined &&
-                !original.armorRemovable &&
-                remainingSlots <= 1
-              return (
-                <div
-                  key={a.character.id}
-                  className="rounded-card border border-border bg-surface p-4 text-on-surface"
-                >
-                  <div className="flex items-baseline justify-between">
-                    <h3 className="font-display text-h2">
-                      {a.character.name}
-                    </h3>
-                    <span className="text-small text-text-muted">
-                      weighted score{" "}
-                      <span className="font-mono text-mono">{a.score}</span>
-                    </span>
-                  </div>
-
-                  <ul className="mt-2 space-y-1 text-small">
-                    <li className="flex items-center gap-2">
-                      <span>
-                        <span className="text-text-muted">Weapon:</span>{" "}
-                        {a.weapon.name}
-                      </span>
-                      <RemoveButton
-                        disabled
-                        disabledReason="A weapon slot can never be empty."
-                      />
-                      <MarkUnavailableButton
-                        onClick={() => markUnavailable(a.weapon)}
-                      />
-                    </li>
-                    {a.armor.map((piece, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span>
-                          <span className="text-text-muted">Armor:</span>{" "}
-                          {piece.name}
-                        </span>
-                        <RemoveButton
-                          disabled={lastArmorProtected}
-                          disabledReason={`${a.character.name} can't unequip armor (armor is not removable) — this is their last armor slot.`}
-                          onClick={() => lockSlot(a.character.id)}
-                        />
-                        <MarkUnavailableButton
-                          onClick={() => markUnavailable(piece)}
-                        />
-                      </li>
-                    ))}
-                    {Array.from({ length: locked }, (_, i) => (
-                      <li key={`locked-${i}`} className="text-text-muted">
-                        <span>Armor:</span> (locked empty)
-                      </li>
-                    ))}
-                  </ul>
-
-                  {locked > 0 && (
-                    <Button
-                      variant="neutral"
-                      size="sm"
-                      onClick={() => resetLocks(a.character.id)}
-                      className="mt-2"
-                    >
-                      Unlock {locked} slot(s)
-                    </Button>
-                  )}
-
-                  <div className="mt-3 flex gap-2">
-                    {STAT_KEYS.map((stat) => (
-                      <div
-                        key={stat}
-                        className="rounded bg-surface-2 px-2 py-1 text-center text-on-surface-2"
-                      >
-                        <div
-                          className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
-                        >
-                          {stat}
-                        </div>
-                        <div
-                          className={`font-mono text-mono font-bold ${STAT_TEXT_CLASS[stat]}`}
-                        >
-                          {a.totals[stat]}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {[a.weapon, ...a.armor].some((it) => it.ability) && (
-                    <ul className="mt-3 space-y-1 rounded-card border border-warning/60 bg-surface-2 p-2 text-small text-on-surface-2">
-                      {[a.weapon, ...a.armor]
-                        .filter((it) => it.ability)
-                        .map((it, i) => (
-                          <li key={i}>
-                            <span className="font-medium text-warning">
-                              {it.name}:
-                            </span>{" "}
-                            {it.ability?.name}
-                            {it.ability?.description
-                              ? ` — ${it.ability.description}`
-                              : ""}
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </div>
-              )
-            })}
-            {result.blocked.map((b) => (
-              <div
-                key={b.character.id}
-                className="rounded-card border border-warning/60 bg-surface p-4 text-on-surface"
-              >
-                <h3 className="font-display text-h2">{b.character.name}</h3>
-                <ul className="mt-2 space-y-1 text-small">
-                  <li>
-                    <span className="text-text-muted">
-                      {b.reason.toLowerCase().includes("weapon")
-                        ? "Weapon:"
-                        : "Armor:"}
-                    </span>{" "}
-                    <span className="text-warning">(none available)</span>
-                  </li>
-                </ul>
-                <p className="mt-2 text-small text-warning">{b.reason}</p>
-              </div>
-            ))}
-          </div>
 
           {inventoryMode === "owned" && (
             <div>

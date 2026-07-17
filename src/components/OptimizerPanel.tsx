@@ -3,9 +3,14 @@ import type { InventoryMode, Item, Stats } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
 import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimize, type ScoredLoadout } from "../lib/optimizer"
-import { STAT_BORDER_CLASS, STAT_TEXT_CLASS } from "../lib/statColors"
+import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { RecentlyUnavailable } from "./RecentlyUnavailable"
+import { SoulHeart } from "./SoulHeart"
 import { MarkUnavailableButton } from "./ui/DestructiveButtons"
+import { Card } from "./ui/Card"
+import { Delta } from "./ui/Delta"
+import { SlotRow } from "./results/SlotRow"
+import { StatBlock } from "./results/StatBlock"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -157,83 +162,48 @@ export function OptimizerPanel() {
 
       {character && result?.ok && best && (
         <>
-          <div className="rounded-card border border-soul/40 bg-surface p-4 text-on-surface">
-            <h3 className="font-display text-h2 text-soul">
-              Best loadout for {character.name} — max{" "}
-              <span className={STAT_TEXT_CLASS[targetStat]}>
-                {targetStat.toUpperCase()}
-              </span>
-            </h3>
-            <ul className="mt-2 space-y-1 text-small">
-              <li className="flex items-center gap-2">
-                <span>
-                  <span className="text-text-muted">Weapon:</span>{" "}
-                  {best.weapon.name}
+          <Card tone="accent" className="space-y-3">
+            <div className="flex items-center gap-2">
+              <SoulHeart className="h-4 w-4 text-soul" />
+              <h3 className="font-display text-h2 text-on-surface">
+                Best loadout for {character.name} — max{" "}
+                <span className={STAT_TEXT_CLASS[targetStat]}>
+                  {targetStat.toUpperCase()}
                 </span>
-                <MarkUnavailableButton
-                  onClick={() => markUnavailable(best.weapon)}
-                />
-              </li>
-              {best.armor.length === 0 && (
-                <li className="text-text-muted">Armor: (no armor)</li>
-              )}
-              {best.armor.map((piece, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span>
-                    <span className="text-text-muted">Armor:</span>{" "}
-                    {piece.name}
-                  </span>
-                  <MarkUnavailableButton
-                    onClick={() => markUnavailable(piece)}
-                  />
-                </li>
-              ))}
-            </ul>
+              </h3>
+            </div>
 
-            <div className="mt-3 flex gap-4">
-              {STAT_KEYS.map((stat) => (
-                <div
-                  key={stat}
-                  className={
-                    "rounded border bg-surface-2 px-3 py-2 text-center text-on-surface-2 " +
-                    (stat === targetStat
-                      ? STAT_BORDER_CLASS[stat]
-                      : "border-border")
+            <div className="space-y-2">
+              <SlotRow
+                slotLabel="Weapon"
+                item={best.weapon}
+                actions={
+                  <MarkUnavailableButton
+                    onClick={() => markUnavailable(best.weapon)}
+                  />
+                }
+              />
+              {best.armor.length === 0 && <SlotRow slotLabel="Armor" />}
+              {best.armor.map((piece, i) => (
+                <SlotRow
+                  key={i}
+                  slotLabel="Armor"
+                  item={piece}
+                  actions={
+                    <MarkUnavailableButton
+                      onClick={() => markUnavailable(piece)}
+                    />
                   }
-                >
-                  <div
-                    className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
-                  >
-                    {stat}
-                  </div>
-                  <div
-                    className={`font-mono text-h2 font-bold ${STAT_TEXT_CLASS[stat]}`}
-                  >
-                    {best.totals[stat]}
-                  </div>
-                </div>
+                />
               ))}
             </div>
 
-            {abilitiesOf(best).length > 0 && (
-              <div className="mt-3 rounded-card border border-warning/60 bg-surface-2 p-3 text-on-surface-2">
-                <h4 className="text-small font-semibold uppercase text-warning">
-                  Abilities (not scored — judge for yourself)
-                </h4>
-                <ul className="mt-1 space-y-1 text-small">
-                  {abilitiesOf(best).map(({ item, index }) => (
-                    <li key={index}>
-                      <span className="font-medium">{item.name}:</span>{" "}
-                      {item.ability?.name}
-                      {item.ability?.description
-                        ? ` — ${item.ability.description}`
-                        : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+            <StatBlock totals={best.totals} highlight={targetStat} />
+            <p className="text-small text-text-muted">
+              Abilities are shown per item above — the optimizer never scores
+              them, so they&apos;re yours to weigh.
+            </p>
+          </Card>
 
           <div>
             <h3 className="mb-2 font-display text-h2 text-on-void">
@@ -259,6 +229,9 @@ export function OptimizerPanel() {
                         {stat}
                       </th>
                     ))}
+                    <th className="p-2 text-left">
+                      Δ {targetStat.toUpperCase()}
+                    </th>
                     <th className="p-2 text-left">Abilities</th>
                   </tr>
                 </thead>
@@ -281,6 +254,14 @@ export function OptimizerPanel() {
                           {loadout.totals[stat]}
                         </td>
                       ))}
+                      <td className="p-2">
+                        <Delta
+                          value={
+                            loadout.totals[targetStat] -
+                            best.totals[targetStat]
+                          }
+                        />
+                      </td>
                       <td className="p-2">
                         {abilitiesOf(loadout)
                           .map(
