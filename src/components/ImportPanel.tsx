@@ -12,6 +12,18 @@ import {
   type ColumnField,
   type DraftItem,
 } from "../lib/pasteParser"
+import { STAT_INPUT_CLASS } from "../lib/statColors"
+import { Button } from "./ui/Button"
+import { Card } from "./ui/Card"
+import { Checkbox } from "./ui/Checkbox"
+import { NumberInput, Select, Textarea, TextInput } from "./ui/inputs"
+
+const STAT_HEAD: Record<"hp" | "atk" | "def" | "magic", string> = {
+  hp: "text-stat-hp",
+  atk: "text-stat-atk",
+  def: "text-stat-def",
+  magic: "text-stat-magic",
+}
 
 interface PendingCollision {
   fresh: DraftItem[]
@@ -159,111 +171,129 @@ export function ImportPanel() {
         <label className="mb-1 block text-small font-medium text-on-void">
           Paste a table from a wiki
         </label>
-        <textarea
+        <Textarea
           value={rawText}
           onChange={(e) => handleTextChange(e.target.value)}
           rows={6}
-          placeholder="Paste tab/comma/pipe separated rows here..."
-          className="w-full rounded-card border border-border bg-void p-2 font-mono text-mono text-on-void placeholder:text-text-muted"
+          placeholder="Paste tab / comma / pipe separated rows here…"
+          className="w-full"
         />
         {delimiter && (
           <p className="mt-1 text-small text-text-muted">
-            Detected delimiter: {DELIMITER_LABELS[delimiter] ?? delimiter} ·{" "}
-            {rows.length} row(s) parsed
+            Detected delimiter:{" "}
+            <span className="font-medium text-on-void">
+              {DELIMITER_LABELS[delimiter] ?? delimiter}
+            </span>{" "}
+            · <span className="font-mono">{rows.length}</span> row(s) parsed
           </p>
         )}
       </div>
 
       {rows.length > 0 && (
         <>
-          <div className="flex flex-wrap items-center gap-4 text-small">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={hasHeader}
-                onChange={(e) => handleHeaderToggle(e.target.checked)}
-              />
-              First row is header
-            </label>
+          <div className="flex flex-wrap items-end gap-4 text-small">
+            <Checkbox
+              label="First row is header"
+              checked={hasHeader}
+              onChange={(e) => handleHeaderToggle(e.target.checked)}
+            />
 
-            <label className="flex items-center gap-2">
-              Type
-              <select
+            <label className="flex flex-col gap-1 text-text-muted">
+              Type (applied to all)
+              <Select
                 value={batchType}
                 onChange={(e) => setBatchType(e.target.value as ItemType)}
-                className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
               >
                 <option value="weapon">Weapon</option>
                 <option value="armor">Armor</option>
-              </select>
+              </Select>
             </label>
 
-            <label className="flex items-center gap-2">
-              Chapter
-              <select
+            <label className="flex flex-col gap-1 text-text-muted">
+              Chapter (applied to all)
+              <Select
                 value={batchChapter}
                 onChange={(e) =>
                   setBatchChapter(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)
                 }
-                className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
               >
                 {[1, 2, 3, 4, 5].map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleApplyBatchDefaults}
-              className="rounded border border-soul px-2 py-1 text-soul hover:bg-soul/10"
             >
               Apply type/chapter to all rows
-            </button>
+            </Button>
           </div>
 
           <div>
-            <h3 className="mb-2 font-display text-h2 text-on-void">
+            <h3 className="font-display text-h2 text-on-void">
               Raw preview &amp; column mapping
             </h3>
+            <p className="mb-2 text-small text-text-muted">
+              Assign each column below. Columns left on{" "}
+              <span className="font-medium">Ignore</span> are muted and won&apos;t
+              be imported.
+            </p>
             <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
               <table className="min-w-full text-small">
                 <thead className="bg-surface-2 text-on-surface-2">
                   <tr>
-                    {columnFields.map((field, i) => (
-                      <th key={i} className="border-b border-border p-2 text-left">
-                        <select
-                          value={field}
-                          onChange={(e) =>
-                            handleColumnFieldChange(
-                              i,
-                              e.target.value as ColumnField,
-                            )
-                          }
-                          className="w-full rounded border border-border bg-void px-1 py-0.5 text-on-void"
+                    {columnFields.map((field, i) => {
+                      const ignored = field === "ignore"
+                      return (
+                        <th
+                          key={i}
+                          className={`border-b border-border p-2 text-left align-top ${
+                            ignored ? "opacity-60" : ""
+                          }`}
                         >
-                          {COLUMN_FIELD_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        {hasHeader && rows[0] && (
-                          <div className="mt-1 truncate text-text-muted">
-                            {rows[0][i]}
-                          </div>
-                        )}
-                      </th>
-                    ))}
+                          <Select
+                            value={field}
+                            onChange={(e) =>
+                              handleColumnFieldChange(
+                                i,
+                                e.target.value as ColumnField,
+                              )
+                            }
+                            className={`w-full ${ignored ? "" : "!text-soul"}`}
+                          >
+                            {COLUMN_FIELD_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </Select>
+                          {hasHeader && rows[0] && (
+                            <div className="mt-1 max-w-40 truncate text-text-muted">
+                              {rows[0][i] || "—"}
+                            </div>
+                          )}
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
                   {(hasHeader ? rows.slice(1) : rows).map((row, i) => (
                     <tr key={i} className="odd:bg-surface even:bg-surface-2">
                       {row.map((cell, j) => (
-                        <td key={j} className="border-b border-border p-2">
+                        <td
+                          key={j}
+                          className={`border-b border-border px-2 py-1.5 ${
+                            columnFields[j] === "ignore"
+                              ? "text-text-muted"
+                              : ""
+                          }`}
+                        >
                           {cell}
                         </td>
                       ))}
@@ -275,158 +305,186 @@ export function ImportPanel() {
           </div>
 
           <div>
-            <h3 className="mb-2 font-display text-h2 text-on-void">
+            <h3 className="font-display text-h2 text-on-void">
               Draft items ({draftItems.length}) — edit before committing
             </h3>
+            <p className="mb-2 text-small text-text-muted">
+              Rows tinted red need a name before they can commit.
+            </p>
             <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
               <table className="min-w-full text-small">
                 <thead className="bg-surface-2 text-on-surface-2">
                   <tr>
-                    <th className="p-2 text-left">Skip</th>
-                    <th className="p-2 text-left">Name</th>
-                    <th className="p-2 text-left">Type</th>
-                    <th className="p-2 text-left">Ch.</th>
-                    <th className="p-2 text-left text-stat-hp">HP</th>
-                    <th className="p-2 text-left text-stat-atk">ATK</th>
-                    <th className="p-2 text-left text-stat-def">DEF</th>
-                    <th className="p-2 text-left text-stat-magic">Magic</th>
-                    <th className="p-2 text-left">Ability</th>
-                    <th className="p-2 text-left">Equippable By</th>
-                    <th className="p-2 text-left">Resists</th>
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Skip
+                    </th>
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Name
+                    </th>
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Type
+                    </th>
+                    <th className="whitespace-nowrap px-2 py-2 text-right">
+                      Ch.
+                    </th>
+                    {(["hp", "atk", "def", "magic"] as const).map((s) => (
+                      <th
+                        key={s}
+                        className={`whitespace-nowrap px-2 py-2 text-right ${STAT_HEAD[s]}`}
+                      >
+                        {s.toUpperCase()}
+                      </th>
+                    ))}
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Ability
+                    </th>
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Equippable By
+                    </th>
+                    <th className="whitespace-nowrap px-2 py-2 text-left">
+                      Resists
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {draftItems.map((row, i) => (
-                    <tr
-                      key={row.key}
-                      className={
-                        row.name.trim() === "" && !row.skip
-                          ? "bg-soul/10"
-                          : "odd:bg-surface even:bg-surface-2"
-                      }
-                    >
-                      <td className="p-1">
-                        <input
-                          type="checkbox"
-                          checked={row.skip}
-                          onChange={(e) =>
-                            updateDraftRow(i, { skip: e.target.checked })
-                          }
-                        />
-                      </td>
-                      <td className="p-1">
-                        <input
-                          value={row.name}
-                          onChange={(e) =>
-                            updateDraftRow(i, { name: e.target.value })
-                          }
-                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <select
-                          value={row.type}
-                          onChange={(e) =>
-                            updateDraftRow(i, {
-                              type: e.target.value as ItemType,
-                            })
-                          }
-                          className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                        >
-                          <option value="weapon">Weapon</option>
-                          <option value="armor">Armor</option>
-                        </select>
-                      </td>
-                      <td className="p-1">
-                        <select
-                          value={row.chapter}
-                          onChange={(e) =>
-                            updateDraftRow(i, {
-                              chapter: Number(e.target.value) as
-                                | 1
-                                | 2
-                                | 3
-                                | 4
-                                | 5,
-                            })
-                          }
-                          className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                        >
-                          {[1, 2, 3, 4, 5].map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      {(["hp", "atk", "def", "magic"] as const).map((stat) => (
-                        <td key={stat} className="p-1">
-                          <input
-                            type="number"
-                            value={row[stat]}
+                  {draftItems.map((row, i) => {
+                    const invalid = row.name.trim() === "" && !row.skip
+                    return (
+                      <tr
+                        key={row.key}
+                        className={
+                          invalid
+                            ? "bg-soul/10"
+                            : "border-b border-border hover:bg-surface-2"
+                        }
+                      >
+                        <td className="px-2 py-1.5 text-center">
+                          <Checkbox
+                            checked={row.skip}
                             onChange={(e) =>
-                              updateDraftRow(i, {
-                                [stat]:
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value),
-                              })
+                              updateDraftRow(i, { skip: e.target.checked })
                             }
-                            className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
+                            aria-label={`Skip row ${i + 1}`}
                           />
                         </td>
-                      ))}
-                      <td className="p-1">
-                        <input
-                          value={row.abilityName}
-                          onChange={(e) =>
-                            updateDraftRow(i, { abilityName: e.target.value })
-                          }
-                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <input
-                          value={row.equippableByText}
-                          onChange={(e) =>
-                            updateDraftRow(i, {
-                              equippableByText: e.target.value,
-                            })
-                          }
-                          placeholder="all"
-                          className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <input
-                          value={row.resistancesText}
-                          onChange={(e) =>
-                            updateDraftRow(i, {
-                              resistancesText: e.target.value,
-                            })
-                          }
-                          placeholder="puppet 35 ch5:20"
-                          className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="px-2 py-1.5">
+                          <TextInput
+                            value={row.name}
+                            onChange={(e) =>
+                              updateDraftRow(i, { name: e.target.value })
+                            }
+                            className="w-32"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <Select
+                            value={row.type}
+                            onChange={(e) =>
+                              updateDraftRow(i, {
+                                type: e.target.value as ItemType,
+                              })
+                            }
+                          >
+                            <option value="weapon">Weapon</option>
+                            <option value="armor">Armor</option>
+                          </Select>
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <Select
+                            value={row.chapter}
+                            onChange={(e) =>
+                              updateDraftRow(i, {
+                                chapter: Number(e.target.value) as
+                                  | 1
+                                  | 2
+                                  | 3
+                                  | 4
+                                  | 5,
+                              })
+                            }
+                          >
+                            {[1, 2, 3, 4, 5].map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </Select>
+                        </td>
+                        {(["hp", "atk", "def", "magic"] as const).map((stat) => (
+                          <td key={stat} className="px-2 py-1.5">
+                            <NumberInput
+                              value={row[stat]}
+                              onChange={(e) =>
+                                updateDraftRow(i, {
+                                  [stat]:
+                                    e.target.value === ""
+                                      ? 0
+                                      : Number(e.target.value),
+                                })
+                              }
+                              className={`w-16 text-right ${STAT_INPUT_CLASS[stat]}`}
+                            />
+                          </td>
+                        ))}
+                        <td className="px-2 py-1.5">
+                          <TextInput
+                            value={row.abilityName}
+                            onChange={(e) =>
+                              updateDraftRow(i, { abilityName: e.target.value })
+                            }
+                            className="w-32"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <TextInput
+                            value={row.equippableByText}
+                            onChange={(e) =>
+                              updateDraftRow(i, {
+                                equippableByText: e.target.value,
+                              })
+                            }
+                            placeholder="all"
+                            className="w-32"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <TextInput
+                            value={row.resistancesText}
+                            onChange={(e) =>
+                              updateDraftRow(i, {
+                                resistancesText: e.target.value,
+                              })
+                            }
+                            placeholder="puppet 35 ch5:20"
+                            className="w-40 font-mono text-mono"
+                          />
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
 
           {pendingCollision && (
-            <div className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
+            <Card tone="warning" className="text-small">
               <p className="font-medium">
-                {pendingCollision.colliding.length} item(s) already exist:{" "}
+                <span className="text-warning">
+                  {pendingCollision.colliding.length} item(s) already exist:
+                </span>{" "}
                 {pendingCollision.colliding
                   .map((c) => c.existing.name)
                   .join(", ")}
               </p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
+              <p className="mt-1 text-text-muted">
+                Overwrite replaces the existing entries; Skip keeps them and
+                imports only the new items.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="warning"
+                  size="sm"
                   onClick={() =>
                     finalizeCommit(
                       pendingCollision.fresh,
@@ -434,12 +492,12 @@ export function ImportPanel() {
                       "overwrite",
                     )
                   }
-                  className="rounded bg-warning px-3 py-1 font-medium text-on-warning hover:bg-warning/90"
                 >
                   Overwrite existing
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="warning"
+                  size="sm"
                   onClick={() =>
                     finalizeCommit(
                       pendingCollision.fresh,
@@ -447,30 +505,28 @@ export function ImportPanel() {
                       "skip",
                     )
                   }
-                  className="rounded border border-warning/60 px-3 py-1 text-warning hover:bg-warning/10"
                 >
                   Skip these
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="neutral"
+                  size="sm"
                   onClick={() => setPendingCollision(null)}
-                  className="rounded border border-border px-3 py-1 text-on-surface hover:bg-surface-2"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           )}
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={handleCommit}
             disabled={draftItems.length === 0 || pendingCollision !== null}
-            className="rounded bg-soul px-4 py-2 text-small font-medium text-on-soul hover:bg-soul/90 disabled:opacity-50"
           >
             Commit {draftItems.filter((r) => !r.skip).length} item(s) to
             dataset
-          </button>
+          </Button>
         </>
       )}
 

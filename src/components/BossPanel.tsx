@@ -13,7 +13,9 @@ import { ELEMENT_LABELS, ELEMENTS } from "../lib/resistanceFormat"
 import { slugify, uniqueSlug } from "../lib/slug"
 import { SoulHeart } from "./SoulHeart"
 import { MarkUnavailableButton } from "./ui/DestructiveButtons"
+import { Button } from "./ui/Button"
 import { Card } from "./ui/Card"
+import { NumberInput, Select, TextInput } from "./ui/inputs"
 import { SlotRow } from "./results/SlotRow"
 import { StatBlock } from "./results/StatBlock"
 
@@ -21,9 +23,6 @@ const PROFILE_KEYS: (Exclude<Element, "all"> | "neutral")[] = [
   ...ELEMENTS,
   "neutral",
 ]
-
-const inputClass =
-  "rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
 
 export function BossPanel({
   onMarkUnavailable,
@@ -122,30 +121,29 @@ export function BossPanel({
         ))}
 
         <div className="flex items-center gap-2">
-          <input
+          <TextInput
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Boss name"
-            className={`w-36 ${inputClass}`}
+            className="w-36"
           />
           <label className="flex items-center gap-1 text-small text-text-muted">
             Ch.
-            <input
-              type="number"
+            <NumberInput
               min={1}
               value={newChapter}
               onChange={(e) => setNewChapter(Number(e.target.value) || 1)}
-              className={`w-14 font-mono ${inputClass}`}
+              className="w-16 text-right"
             />
           </label>
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={addBoss}
             disabled={!newName.trim()}
-            className="rounded bg-soul px-3 py-1 text-small font-medium text-on-soul hover:bg-soul/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Add boss
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -405,118 +403,121 @@ function BossEditor({
     })
   }
 
+  const profileOff = Math.abs(profileSum - 1) > 0.05
+
   return (
-    <div className="space-y-3 rounded-card border border-dashed border-border p-3 text-small text-on-void">
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          value={boss.name}
-          onChange={(e) => updateBoss(boss.id, { name: e.target.value })}
-          className={`w-40 ${inputClass}`}
-          aria-label="Boss name"
-        />
-        <label className="flex items-center gap-1 text-text-muted">
+    <div className="space-y-4 rounded-card border border-dashed border-border p-4 text-small text-on-void">
+      {/* Identity */}
+      <div className="flex flex-wrap items-end gap-4">
+        <label className="flex flex-col gap-1 text-text-muted">
+          Name
+          <TextInput
+            value={boss.name}
+            onChange={(e) => updateBoss(boss.id, { name: e.target.value })}
+            className="w-40"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-text-muted">
           Chapter
-          <input
-            type="number"
+          <NumberInput
             min={1}
             value={boss.chapter}
             onChange={(e) =>
               updateBoss(boss.id, { chapter: Number(e.target.value) || 1 })
             }
-            className={`w-14 font-mono ${inputClass}`}
+            className="w-16 text-right"
           />
         </label>
-        <label className="flex items-center gap-1 text-text-muted">
+        <label className="flex flex-col gap-1 text-text-muted">
           Win by
-          <select
+          <Select
             value={boss.winCondition}
             onChange={(e) =>
               updateBoss(boss.id, {
                 winCondition: e.target.value as WinCondition,
               })
             }
-            className={inputClass}
           >
             <option value="fight">fight</option>
             <option value="spare">spare</option>
             <option value="special">special</option>
-          </select>
+          </Select>
         </label>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => deleteBoss(boss.id)}
-          className="ml-auto rounded border border-soul/60 px-2 py-1 text-small text-soul hover:bg-soul/10"
+          className="ml-auto"
         >
           Delete boss
-        </button>
+        </Button>
       </div>
 
-      <fieldset className="flex flex-wrap items-center gap-3">
-        <legend className="sr-only">Damage profile</legend>
-        <span className="text-text-muted">Damage shares</span>
-        {PROFILE_KEYS.map((key) => (
-          <label key={key} className="flex items-center gap-1">
-            {ELEMENT_LABELS[key]}
-            <input
-              type="number"
-              step={0.05}
-              min={0}
-              max={1}
-              value={boss.damageProfile[key] ?? 0}
-              onChange={(e) =>
-                updateBoss(boss.id, {
-                  damageProfile: {
-                    ...boss.damageProfile,
-                    [key]:
-                      e.target.value === "" ? 0 : Number(e.target.value),
-                  },
-                })
-              }
-              className={`w-16 font-mono ${inputClass}`}
-            />
-          </label>
-        ))}
-        <span
-          className={
-            Math.abs(profileSum - 1) > 0.05
-              ? "font-mono text-warning"
-              : "font-mono text-text-muted"
-          }
-        >
-          Σ {profileSum.toFixed(2)}
-          {Math.abs(profileSum - 1) > 0.05 ? " (should be ~1)" : ""}
-        </span>
+      {/* Damage profile — shares should sum to ~1 */}
+      <fieldset>
+        <legend className="mb-1.5 flex items-center gap-2 font-medium text-text-muted">
+          Damage shares
+          <span className="font-normal">— should sum to ~1.00</span>
+          <span
+            className={`rounded px-2 py-0.5 font-mono ${
+              profileOff
+                ? "bg-warning/10 text-warning"
+                : "bg-surface-2 text-on-surface-2"
+            }`}
+          >
+            Σ {profileSum.toFixed(2)}
+            {profileOff ? " ⚠" : " ✓"}
+          </span>
+        </legend>
+        <div className="flex flex-wrap gap-3">
+          {PROFILE_KEYS.map((key) => (
+            <label key={key} className="flex flex-col gap-1 text-text-muted">
+              {ELEMENT_LABELS[key]}
+              <NumberInput
+                step={0.05}
+                min={0}
+                max={1}
+                value={boss.damageProfile[key] ?? 0}
+                onChange={(e) =>
+                  updateBoss(boss.id, {
+                    damageProfile: {
+                      ...boss.damageProfile,
+                      [key]: e.target.value === "" ? 0 : Number(e.target.value),
+                    },
+                  })
+                }
+                className="w-20 text-right"
+              />
+            </label>
+          ))}
+        </div>
       </fieldset>
 
+      {/* Special rules */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-text-muted">
+          <span className="font-medium text-text-muted">
             Special rules (attacks that bypass elements)
           </span>
-          <button
-            type="button"
-            onClick={addRule}
-            className="rounded border border-border px-2 py-0.5 text-small text-on-void hover:bg-surface-2"
-          >
+          <Button variant="neutral" size="sm" onClick={addRule}>
             Add rule
-          </button>
+          </Button>
         </div>
         {(boss.specialRules ?? []).map((rule, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
-            <input
+            <TextInput
               value={rule.itemName}
               onChange={(e) => updateRule(i, { itemName: e.target.value })}
               placeholder="Item name (e.g. Shadow Mantle)"
-              className={`w-52 ${inputClass}`}
+              className="w-52"
             />
-            <select
+            <Select
               value={rule.requiredCharacterId ?? ""}
               onChange={(e) =>
                 updateRule(i, {
                   requiredCharacterId: e.target.value || undefined,
                 })
               }
-              className={inputClass}
             >
               <option value="">any character</option>
               {dataset.characters.map((c) => (
@@ -524,11 +525,10 @@ function BossEditor({
                   {c.name} only
                 </option>
               ))}
-            </select>
+            </Select>
             <label className="flex items-center gap-1 text-text-muted">
               cuts damage
-              <input
-                type="number"
+              <NumberInput
                 min={0}
                 max={100}
                 value={Math.round(rule.flatReduction * 100)}
@@ -539,29 +539,28 @@ function BossEditor({
                       100,
                   })
                 }
-                className={`w-16 font-mono ${inputClass}`}
+                className="w-16 text-right"
               />
               %
             </label>
-            <button
-              type="button"
-              onClick={() => removeRule(i)}
-              className="rounded border border-soul/60 px-2 py-0.5 text-small text-soul hover:bg-soul/10"
-            >
+            <Button variant="secondary" size="sm" onClick={() => removeRule(i)}>
               Remove
-            </button>
+            </Button>
           </div>
         ))}
       </div>
 
-      <input
-        value={boss.notes ?? ""}
-        onChange={(e) =>
-          updateBoss(boss.id, { notes: e.target.value || undefined })
-        }
-        placeholder="Notes (what does this fight actually do?)"
-        className={`w-full ${inputClass}`}
-      />
+      <label className="flex flex-col gap-1 text-text-muted">
+        Notes
+        <TextInput
+          value={boss.notes ?? ""}
+          onChange={(e) =>
+            updateBoss(boss.id, { notes: e.target.value || undefined })
+          }
+          placeholder="What does this fight actually do?"
+          className="w-full"
+        />
+      </label>
     </div>
   )
 }

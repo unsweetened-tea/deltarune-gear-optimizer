@@ -26,3 +26,15 @@ export const STAT_RING_CLASS: Record<keyof Stats, string> = {
   def: "ring-1 ring-inset ring-stat-def",
   magic: "ring-1 ring-inset ring-stat-magic",
 }
+
+/**
+ * Stat hue forced onto an input's own text (important, to win over a
+ * primitive's default text color) — so an editable −6 Magic reads
+ * purple, pairing the sign with the stat color, not color alone.
+ */
+export const STAT_INPUT_CLASS: Record<keyof Stats, string> = {
+  hp: "!text-stat-hp",
+  atk: "!text-stat-atk",
+  def: "!text-stat-def",
+  magic: "!text-stat-magic",
+}

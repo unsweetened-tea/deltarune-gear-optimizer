@@ -9,8 +9,19 @@ import {
   parseIdList,
 } from "../lib/characterRefs"
 import { formatResistances, parseResistances } from "../lib/resistanceFormat"
+import { STAT_INPUT_CLASS } from "../lib/statColors"
+import { Button } from "./ui/Button"
+import { Checkbox } from "./ui/Checkbox"
+import { NumberInput, Select, TextInput } from "./ui/inputs"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
+
+const STAT_HEADER_CLASS: Record<keyof Stats, string> = {
+  hp: "text-stat-hp",
+  atk: "text-stat-atk",
+  def: "text-stat-def",
+  magic: "text-stat-magic",
+}
 
 export function ItemsPanel() {
   const { dataset, setDataset } = useDataset()
@@ -23,13 +34,34 @@ export function ItemsPanel() {
   const filteredItems = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return dataset.items.filter((item) => {
-      if (needle && !item.name.toLowerCase().includes(needle)) return false
+      // Search covers name, source (for "UNCERTAIN"/"STATS NEEDED" notes),
+      // and ability text so verification passes are findable.
+      if (needle) {
+        const haystack = [
+          item.name,
+          item.source ?? "",
+          item.ability?.name ?? "",
+          item.ability?.description ?? "",
+        ]
+          .join(" ")
+          .toLowerCase()
+        if (!haystack.includes(needle)) return false
+      }
       if (filterChapter !== "all" && item.chapter !== filterChapter)
         return false
       if (filterType !== "all" && item.type !== filterType) return false
       return true
     })
   }, [dataset.items, search, filterChapter, filterType])
+
+  const filtersActive =
+    search.trim() !== "" || filterChapter !== "all" || filterType !== "all"
+
+  function clearFilters() {
+    setSearch("")
+    setFilterChapter("all")
+    setFilterType("all")
+  }
 
   function updateItem(id: string, patch: Partial<Item>) {
     setDataset((prev) => ({
@@ -89,19 +121,27 @@ export function ItemsPanel() {
     setDataset((prev) => ({ ...prev, items: [...prev.items, newItem] }))
   }
 
+  const headCell = "whitespace-nowrap px-2 py-2 text-left font-medium"
+  const numHeadCell = "whitespace-nowrap px-2 py-2 text-right font-medium"
+  const cell = "px-2 py-1.5 align-middle"
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 text-small">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name..."
-          className="rounded border border-border bg-void px-2 py-1 text-on-void placeholder:text-text-muted"
-        />
-        <label className="flex items-center gap-2">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-small text-text-muted">
+          Search
+          <TextInput
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, source, ability…"
+            className="w-56"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-small text-text-muted">
           Chapter
-          <select
-            value={filterChapter}
+          <Select
+            value={filterChapter === "all" ? "all" : String(filterChapter)}
             onChange={(e) =>
               setFilterChapter(
                 e.target.value === "all"
@@ -109,7 +149,6 @@ export function ItemsPanel() {
                   : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
               )
             }
-            className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
           >
             <option value="all">All</option>
             {[1, 2, 3, 4, 5].map((c) => (
@@ -117,239 +156,265 @@ export function ItemsPanel() {
                 {c}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex flex-col gap-1 text-small text-text-muted">
           Type
-          <select
+          <Select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as "all" | ItemType)}
-            className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
           >
             <option value="all">All</option>
             <option value="weapon">Weapon</option>
             <option value="armor">Armor</option>
-          </select>
+          </Select>
         </label>
-        <button
-          type="button"
+        {filtersActive && (
+          <Button variant="neutral" size="sm" onClick={clearFilters}>
+            Clear filters
+          </Button>
+        )}
+        <Button
+          variant="primary"
           onClick={addBlankItem}
-          className="ml-auto rounded bg-soul px-3 py-1 font-medium text-on-soul hover:bg-soul/90"
+          className="ml-auto"
         >
           Add item
-        </button>
+        </Button>
       </div>
 
       <p className="text-small text-text-muted">
-        {filteredItems.length} of {dataset.items.length} item(s)
+        Showing{" "}
+        <span className="font-mono text-on-void">{filteredItems.length}</span>{" "}
+        of <span className="font-mono">{dataset.items.length}</span> items
+        {filtersActive && (
+          <>
+            {" · "}
+            {search.trim() && <>name/source “{search.trim()}” </>}
+            {filterChapter !== "all" && <>· chapter {filterChapter} </>}
+            {filterType !== "all" && <>· {filterType} </>}
+          </>
+        )}
       </p>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-surface text-on-surface">
-        <table className="min-w-full text-small">
-          <thead className="bg-surface-2 text-on-surface-2">
-            <tr>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Type</th>
-              <th className="p-2 text-left">Ch.</th>
-              <th className="p-2 text-left text-stat-hp">HP</th>
-              <th className="p-2 text-left text-stat-atk">ATK</th>
-              <th className="p-2 text-left text-stat-def">DEF</th>
-              <th className="p-2 text-left text-stat-magic">Magic</th>
-              <th className="p-2 text-left">Equippable By</th>
-              <th className="p-2 text-left">Excluded From</th>
-              <th className="p-2 text-left">Resistances</th>
-              <th className="p-2 text-left">Ability Name</th>
-              <th className="p-2 text-left">Ability Desc.</th>
-              <th className="p-2 text-left">Owned</th>
+      {/* Table — sticky header row and sticky name column */}
+      <div className="max-h-[70vh] overflow-auto rounded-card border border-border">
+        <table className="min-w-full border-collapse text-small">
+          <thead className="sticky top-0 z-20">
+            <tr className="bg-surface-2 text-on-surface-2">
               <th
-                className="p-2 text-left"
+                className={`sticky left-0 z-30 bg-surface-2 ${headCell}`}
+              >
+                Name
+              </th>
+              <th className={headCell}>Type</th>
+              <th className={numHeadCell}>Ch.</th>
+              {STAT_KEYS.map((stat) => (
+                <th
+                  key={stat}
+                  className={`${numHeadCell} ${STAT_HEADER_CLASS[stat]}`}
+                >
+                  {stat.toUpperCase()}
+                </th>
+              ))}
+              <th className={headCell}>Equippable By</th>
+              <th className={headCell}>Excluded From</th>
+              <th className={headCell}>Resistances</th>
+              <th className={headCell}>Ability Name</th>
+              <th className={headCell}>Ability Desc.</th>
+              <th className={numHeadCell}>Owned</th>
+              <th
+                className={headCell}
                 title="Never a candidate in any optimizer, regardless of owned — for joke/unused gear"
               >
                 Exclude
               </th>
-              <th className="p-2 text-left">Source</th>
-              <th className="p-2 text-left"></th>
+              <th className={headCell}>Source</th>
+              <th className={headCell}></th>
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map((item) => (
-              <tr key={item.id} className="odd:bg-surface even:bg-surface-2">
-                <td className="p-1">
-                  <input
-                    value={item.name}
-                    onChange={(e) =>
-                      updateItem(item.id, { name: e.target.value })
-                    }
-                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                  />
-                </td>
-                <td className="p-1">
-                  <select
-                    value={item.type}
-                    onChange={(e) =>
-                      updateItem(item.id, {
-                        type: e.target.value as ItemType,
-                      })
-                    }
-                    className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
+            {filteredItems.map((item) => {
+              const excluded = item.excludeFromOptimizer === true
+              const rowBg = excluded ? "bg-void" : "bg-surface"
+              return (
+                <tr
+                  key={item.id}
+                  className={`group border-b border-border ${rowBg} hover:bg-surface-2`}
+                >
+                  <td
+                    className={`sticky left-0 z-10 ${rowBg} group-hover:bg-surface-2 ${cell}`}
                   >
-                    <option value="weapon">Weapon</option>
-                    <option value="armor">Armor</option>
-                  </select>
-                </td>
-                <td className="p-1">
-                  <select
-                    value={item.chapter === null ? "" : String(item.chapter)}
-                    onChange={(e) =>
-                      updateItem(item.id, {
-                        chapter:
-                          e.target.value === ""
-                            ? null
-                            : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
-                      })
-                    }
-                    className="rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                    title="? = chapter unknown — passes every chapter filter"
-                  >
-                    <option value="">?</option>
-                    {[1, 2, 3, 4, 5].map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                {STAT_KEYS.map((stat) => (
-                  <td key={stat} className="p-1">
-                    <input
-                      type="number"
-                      value={item.stats[stat]}
+                    <TextInput
+                      value={item.name}
                       onChange={(e) =>
-                        updateItemStat(
-                          item.id,
-                          stat,
-                          e.target.value === "" ? 0 : Number(e.target.value),
-                        )
+                        updateItem(item.id, { name: e.target.value })
                       }
-                      className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
+                      className={`w-40 ${excluded ? "italic !text-text-muted" : ""}`}
                     />
                   </td>
-                ))}
-                <td className="p-1">
-                  <input
-                    key={`${item.id}-equip`}
-                    defaultValue={formatEquippableBy(
-                      item.equippableBy,
-                      dataset.characters,
-                    )}
-                    onBlur={(e) =>
-                      updateItem(item.id, {
-                        equippableBy: parseEquippableBy(
-                          e.target.value,
-                          dataset.characters,
-                        ),
-                      })
-                    }
-                    placeholder="all"
-                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    key={`${item.id}-excluded`}
-                    defaultValue={formatIdList(
-                      item.excludedFrom,
-                      dataset.characters,
-                    )}
-                    onBlur={(e) =>
-                      updateItem(item.id, {
-                        excludedFrom: parseIdList(
-                          e.target.value,
-                          dataset.characters,
-                        ),
-                      })
-                    }
-                    className="w-32 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    key={`${item.id}-resists`}
-                    defaultValue={formatResistances(item.resistances)}
-                    onBlur={(e) =>
-                      updateItem(item.id, {
-                        resistances: parseResistances(e.target.value),
-                      })
-                    }
-                    placeholder="puppet 35 ch5:20"
-                    className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void placeholder:text-text-muted"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    value={item.ability?.name ?? ""}
-                    onChange={(e) =>
-                      updateItemAbility(item.id, { name: e.target.value })
-                    }
-                    className="w-28 rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    value={item.ability?.description ?? ""}
-                    onChange={(e) =>
-                      updateItemAbility(item.id, {
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-40 rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    min={0}
-                    value={item.owned}
-                    onChange={(e) =>
-                      updateItem(item.id, {
-                        owned: e.target.value === "" ? 0 : Number(e.target.value),
-                      })
-                    }
-                    className="w-16 rounded border border-border bg-void px-1 py-0.5 font-mono text-on-void"
-                  />
-                </td>
-                <td className="p-1 text-center">
-                  <input
-                    type="checkbox"
-                    checked={item.excludeFromOptimizer === true}
-                    onChange={(e) =>
-                      updateItem(item.id, {
-                        excludeFromOptimizer: e.target.checked || undefined,
-                      })
-                    }
-                    aria-label="Exclude from optimizer"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    value={item.source ?? ""}
-                    onChange={(e) =>
-                      updateItem(item.id, { source: e.target.value })
-                    }
-                    className="w-28 rounded border border-border bg-void px-1 py-0.5 text-on-void"
-                  />
-                </td>
-                <td className="p-1">
-                  <button
-                    type="button"
-                    onClick={() => deleteItem(item.id, item.name)}
-                    className="rounded border border-soul/60 px-2 py-0.5 text-soul hover:bg-soul/10"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className={cell}>
+                    <Select
+                      value={item.type}
+                      onChange={(e) =>
+                        updateItem(item.id, { type: e.target.value as ItemType })
+                      }
+                    >
+                      <option value="weapon">Weapon</option>
+                      <option value="armor">Armor</option>
+                    </Select>
+                  </td>
+                  <td className={cell}>
+                    <Select
+                      value={item.chapter === null ? "" : String(item.chapter)}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          chapter:
+                            e.target.value === ""
+                              ? null
+                              : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
+                        })
+                      }
+                      title="? = chapter unknown — passes every chapter filter"
+                    >
+                      <option value="">?</option>
+                      {[1, 2, 3, 4, 5].map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </Select>
+                  </td>
+                  {STAT_KEYS.map((stat) => (
+                    <td key={stat} className={cell}>
+                      <NumberInput
+                        value={item.stats[stat]}
+                        onChange={(e) =>
+                          updateItemStat(
+                            item.id,
+                            stat,
+                            e.target.value === "" ? 0 : Number(e.target.value),
+                          )
+                        }
+                        className={`w-16 text-right ${STAT_INPUT_CLASS[stat]}`}
+                      />
+                    </td>
+                  ))}
+                  <td className={cell}>
+                    <TextInput
+                      key={`${item.id}-equip`}
+                      defaultValue={formatEquippableBy(
+                        item.equippableBy,
+                        dataset.characters,
+                      )}
+                      onBlur={(e) =>
+                        updateItem(item.id, {
+                          equippableBy: parseEquippableBy(
+                            e.target.value,
+                            dataset.characters,
+                          ),
+                        })
+                      }
+                      placeholder="all"
+                      className="w-32"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      key={`${item.id}-excluded`}
+                      defaultValue={formatIdList(
+                        item.excludedFrom,
+                        dataset.characters,
+                      )}
+                      onBlur={(e) =>
+                        updateItem(item.id, {
+                          excludedFrom: parseIdList(
+                            e.target.value,
+                            dataset.characters,
+                          ),
+                        })
+                      }
+                      className="w-32"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      key={`${item.id}-resists`}
+                      defaultValue={formatResistances(item.resistances)}
+                      onBlur={(e) =>
+                        updateItem(item.id, {
+                          resistances: parseResistances(e.target.value),
+                        })
+                      }
+                      placeholder="puppet 35 ch5:20"
+                      className="w-40 font-mono text-mono"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      value={item.ability?.name ?? ""}
+                      onChange={(e) =>
+                        updateItemAbility(item.id, { name: e.target.value })
+                      }
+                      className="w-28"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      value={item.ability?.description ?? ""}
+                      onChange={(e) =>
+                        updateItemAbility(item.id, {
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-48"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <NumberInput
+                      min={0}
+                      value={item.owned}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          owned:
+                            e.target.value === "" ? 0 : Number(e.target.value),
+                        })
+                      }
+                      className="w-20 text-right"
+                    />
+                  </td>
+                  <td className={`${cell} text-center`}>
+                    <Checkbox
+                      checked={excluded}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          excludeFromOptimizer: e.target.checked || undefined,
+                        })
+                      }
+                      aria-label={`Exclude ${item.name} from optimizer`}
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      value={item.source ?? ""}
+                      onChange={(e) =>
+                        updateItem(item.id, { source: e.target.value })
+                      }
+                      className="w-40"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => deleteItem(item.id, item.name)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

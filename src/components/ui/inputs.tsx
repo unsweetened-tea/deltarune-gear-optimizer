@@ -1,4 +1,8 @@
-import type { InputHTMLAttributes, SelectHTMLAttributes } from "react"
+import type {
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react"
 
 const FIELD_BASE =
   "rounded border border-border bg-void text-on-void transition-colors hover:border-text-muted disabled:cursor-not-allowed disabled:border-dashed disabled:text-text-muted placeholder:text-text-muted"
@@ -28,6 +32,18 @@ export function NumberInput({
     <input
       type="number"
       className={`${FIELD_BASE} px-2 py-1 font-mono text-mono tabular-nums ${className}`}
+      {...rest}
+    />
+  )
+}
+
+export function Textarea({
+  className = "",
+  ...rest
+}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      className={`${FIELD_BASE} p-2 font-mono text-mono ${className}`}
       {...rest}
     />
   )
