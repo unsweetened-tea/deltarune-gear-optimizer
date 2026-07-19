@@ -107,3 +107,19 @@
     }
   }
 }
+
+/*
+ * The app's single motion moment: a gentle fade+rise when the
+ * recommendation updates. Applied via `motion-safe:` and additionally
+ * neutralized by the reduced-motion rule above.
+ */
+@keyframes result-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

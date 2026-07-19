@@ -258,19 +258,22 @@ export function OptimizeScreen() {
         <BossPanel onMarkUnavailable={markUnavailable} />
       ) : dataset.items.length === 0 ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
-          No items in your dataset yet. Paste gear tables in the{" "}
-          <span className="font-medium text-on-surface">Import</span> tab (or
-          add items by hand in{" "}
-          <span className="font-medium text-on-surface">Items</span>) and
-          results will appear here automatically.
+          No gear loaded yet — click{" "}
+          <span className="font-medium text-on-surface">
+            Reset to default data
+          </span>{" "}
+          above, or paste a wiki table in the{" "}
+          <span className="font-medium text-on-surface">Import</span> tab.
+          Results appear here automatically.
         </p>
       ) : party.length === 0 ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
-          No active party members — check at least one character above.
+          No active party members — tick at least one character in the{" "}
+          <span className="font-medium text-on-surface">Party</span> row above.
         </p>
       ) : !preset ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
-          Select or create a preset to see results.
+          Select a preset above to see results.
         </p>
       ) : result && !result.ok ? (
         <p className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
@@ -304,7 +307,12 @@ export function OptimizeScreen() {
             </p>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div
+            key={result.assignments
+              .map((a) => a.weapon.id + a.armor.map((x) => x.id).join())
+              .join("|")}
+            className="grid gap-4 motion-safe:animate-[result-fade-in_180ms_ease-out] md:grid-cols-2"
+          >
             {result.assignments.map((a) => {
               const original = datasetCharacter(a.character.id)
               const locked = locks[a.character.id] ?? 0
@@ -395,13 +403,8 @@ export function OptimizeScreen() {
 
           {result.assignments.length > 0 && (
             <Card className="text-small">
-              <span className="text-text-muted">Objective</span>{" "}
-              <span className="font-medium text-on-surface">
-                {preset.label}
-              </span>
-              <span className="mx-2 text-text-muted">·</span>
               <span className="text-text-muted">
-                {objectiveLabel(preset.objective)} ·{" "}
+                Objective {objectiveLabel(preset.objective)} ·{" "}
                 {inventoryMode === "owned"
                   ? "Owned pool (shared)"
                   : "Unlimited"}

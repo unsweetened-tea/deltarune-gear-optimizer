@@ -149,18 +149,27 @@ export function OptimizerPanel() {
         onUndo={undoUnavailable}
       />
 
-      {!character && (
-        <p className="text-small text-text-muted">No character selected.</p>
-      )}
-
-      {result && !result.ok && (
+      {dataset.items.length === 0 ? (
+        <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
+          No gear loaded yet — click{" "}
+          <span className="font-medium text-on-surface">
+            Reset to default data
+          </span>{" "}
+          above, or paste a wiki table in the{" "}
+          <span className="font-medium text-on-surface">Import</span> tab.
+        </p>
+      ) : !character ? (
+        <p className="text-small text-text-muted">
+          Pick a character above to see their best loadout.
+        </p>
+      ) : result && !result.ok ? (
         <p className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
           <span className="font-semibold text-warning">Can’t optimize: </span>
           {result.reason}
         </p>
-      )}
+      ) : null}
 
-      {character && result?.ok && best && (
+      {dataset.items.length > 0 && character && result?.ok && best && (
         <>
           <Card tone="accent" className="space-y-3">
             <div className="flex items-center gap-2">

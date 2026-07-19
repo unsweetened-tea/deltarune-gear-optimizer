@@ -178,7 +178,7 @@ export function ImportPanel() {
           placeholder="Paste tab / comma / pipe separated rows here…"
           className="w-full"
         />
-        {delimiter && (
+        {delimiter && rows.length > 0 && (
           <p className="mt-1 text-small text-text-muted">
             Detected delimiter:{" "}
             <span className="font-medium text-on-void">
@@ -186,6 +186,20 @@ export function ImportPanel() {
             </span>{" "}
             · <span className="font-mono">{rows.length}</span> row(s) parsed
           </p>
+        )}
+        {rawText.trim() === "" ? (
+          <p className="mt-2 text-small text-text-muted">
+            Copy a gear table from the wiki and paste it above — tab, comma, or
+            pipe separated. Keep the header row; you&apos;ll map columns and
+            edit rows before committing.
+          </p>
+        ) : (
+          rows.length === 0 && (
+            <p className="mt-2 text-small text-warning">
+              Couldn&apos;t find any rows to parse. Check that cells are
+              separated by tabs, commas, or pipes.
+            </p>
+          )
         )}
       </div>
 

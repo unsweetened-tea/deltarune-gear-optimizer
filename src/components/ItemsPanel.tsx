@@ -11,6 +11,7 @@ import {
 import { formatResistances, parseResistances } from "../lib/resistanceFormat"
 import { STAT_INPUT_CLASS } from "../lib/statColors"
 import { Button } from "./ui/Button"
+import { Card } from "./ui/Card"
 import { Checkbox } from "./ui/Checkbox"
 import { NumberInput, Select, TextInput } from "./ui/inputs"
 
@@ -197,41 +198,83 @@ export function ItemsPanel() {
         )}
       </p>
 
-      {/* Table — sticky header row and sticky name column */}
-      <div className="max-h-[70vh] overflow-auto rounded-card border border-border">
-        <table className="min-w-full border-collapse text-small">
-          <thead className="sticky top-0 z-20">
-            <tr className="bg-surface-2 text-on-surface-2">
-              <th
-                className={`sticky left-0 z-30 bg-surface-2 ${headCell}`}
-              >
-                Name
-              </th>
-              <th className={headCell}>Type</th>
-              <th className={numHeadCell}>Ch.</th>
-              {STAT_KEYS.map((stat) => (
+      {filteredItems.length === 0 ? (
+        <Card className="text-center text-small text-text-muted">
+          {dataset.items.length === 0 ? (
+            <p>
+              No gear loaded yet — click{" "}
+              <span className="font-medium text-on-surface">
+                Reset to default data
+              </span>{" "}
+              above, or paste a wiki table in the{" "}
+              <span className="font-medium text-on-surface">Import</span> tab.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <p>No items match your search or filters.</p>
+              <Button variant="neutral" size="sm" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </Card>
+      ) : (
+        /* Table — sticky header row and sticky name column */
+        <div className="max-h-[70vh] overflow-auto rounded-card border border-border">
+          <table className="min-w-full border-collapse text-small">
+            <thead className="sticky top-0 z-20">
+              <tr className="bg-surface-2 text-on-surface-2">
                 <th
-                  key={stat}
-                  className={`${numHeadCell} ${STAT_HEADER_CLASS[stat]}`}
+                  scope="col"
+                  className={`sticky left-0 z-30 bg-surface-2 ${headCell}`}
                 >
-                  {stat.toUpperCase()}
+                  Name
                 </th>
-              ))}
-              <th className={headCell}>Equippable By</th>
-              <th className={headCell}>Excluded From</th>
-              <th className={headCell}>Resistances</th>
-              <th className={headCell}>Ability Name</th>
-              <th className={headCell}>Ability Desc.</th>
-              <th className={numHeadCell}>Owned</th>
-              <th
-                className={headCell}
-                title="Never a candidate in any optimizer, regardless of owned — for joke/unused gear"
-              >
-                Exclude
-              </th>
-              <th className={headCell}>Source</th>
-              <th className={headCell}></th>
-            </tr>
+                <th scope="col" className={headCell}>
+                  Type
+                </th>
+                <th scope="col" className={numHeadCell}>
+                  Ch.
+                </th>
+                {STAT_KEYS.map((stat) => (
+                  <th
+                    key={stat}
+                    scope="col"
+                    className={`${numHeadCell} ${STAT_HEADER_CLASS[stat]}`}
+                  >
+                    {stat.toUpperCase()}
+                  </th>
+                ))}
+                <th scope="col" className={headCell}>
+                  Equippable By
+                </th>
+                <th scope="col" className={headCell}>
+                  Excluded From
+                </th>
+                <th scope="col" className={headCell}>
+                  Resistances
+                </th>
+                <th scope="col" className={headCell}>
+                  Ability Name
+                </th>
+                <th scope="col" className={headCell}>
+                  Ability Desc.
+                </th>
+                <th scope="col" className={numHeadCell}>
+                  Owned
+                </th>
+                <th
+                  scope="col"
+                  className={headCell}
+                  title="Never a candidate in any optimizer, regardless of owned — for joke/unused gear"
+                >
+                  Exclude
+                </th>
+                <th scope="col" className={headCell}>
+                  Source
+                </th>
+                <th scope="col" className={headCell}></th>
+              </tr>
           </thead>
           <tbody>
             {filteredItems.map((item) => {
@@ -250,6 +293,7 @@ export function ItemsPanel() {
                       onChange={(e) =>
                         updateItem(item.id, { name: e.target.value })
                       }
+                      aria-label="Item name"
                       className={`w-40 ${excluded ? "italic !text-text-muted" : ""}`}
                     />
                   </td>
@@ -259,6 +303,7 @@ export function ItemsPanel() {
                       onChange={(e) =>
                         updateItem(item.id, { type: e.target.value as ItemType })
                       }
+                      aria-label={`${item.name} type`}
                     >
                       <option value="weapon">Weapon</option>
                       <option value="armor">Armor</option>
@@ -275,6 +320,7 @@ export function ItemsPanel() {
                               : (Number(e.target.value) as 1 | 2 | 3 | 4 | 5),
                         })
                       }
+                      aria-label={`${item.name} chapter`}
                       title="? = chapter unknown — passes every chapter filter"
                     >
                       <option value="">?</option>
@@ -296,6 +342,7 @@ export function ItemsPanel() {
                             e.target.value === "" ? 0 : Number(e.target.value),
                           )
                         }
+                        aria-label={`${item.name} ${stat.toUpperCase()}`}
                         className={`w-16 text-right ${STAT_INPUT_CLASS[stat]}`}
                       />
                     </td>
@@ -316,6 +363,7 @@ export function ItemsPanel() {
                         })
                       }
                       placeholder="all"
+                      aria-label={`${item.name} equippable by`}
                       className="w-32"
                     />
                   </td>
@@ -334,6 +382,7 @@ export function ItemsPanel() {
                           ),
                         })
                       }
+                      aria-label={`${item.name} excluded from`}
                       className="w-32"
                     />
                   </td>
@@ -347,6 +396,7 @@ export function ItemsPanel() {
                         })
                       }
                       placeholder="puppet 35 ch5:20"
+                      aria-label={`${item.name} resistances`}
                       className="w-40 font-mono text-mono"
                     />
                   </td>
@@ -356,6 +406,7 @@ export function ItemsPanel() {
                       onChange={(e) =>
                         updateItemAbility(item.id, { name: e.target.value })
                       }
+                      aria-label={`${item.name} ability name`}
                       className="w-28"
                     />
                   </td>
@@ -367,6 +418,7 @@ export function ItemsPanel() {
                           description: e.target.value,
                         })
                       }
+                      aria-label={`${item.name} ability description`}
                       className="w-48"
                     />
                   </td>
@@ -380,6 +432,7 @@ export function ItemsPanel() {
                             e.target.value === "" ? 0 : Number(e.target.value),
                         })
                       }
+                      aria-label={`${item.name} owned count`}
                       className="w-20 text-right"
                     />
                   </td>
@@ -400,6 +453,7 @@ export function ItemsPanel() {
                       onChange={(e) =>
                         updateItem(item.id, { source: e.target.value })
                       }
+                      aria-label={`${item.name} source`}
                       className="w-40"
                     />
                   </td>
@@ -408,16 +462,18 @@ export function ItemsPanel() {
                       variant="secondary"
                       size="sm"
                       onClick={() => deleteItem(item.id, item.name)}
+                      aria-label={`Delete ${item.name}`}
                     >
                       Delete
                     </Button>
                   </td>
                 </tr>
               )
-            })}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

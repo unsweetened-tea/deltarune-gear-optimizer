@@ -205,8 +205,13 @@ export function BossPanel({
 
           {dataset.items.length === 0 ? (
             <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
-              No items in your dataset yet — import gear first, then come
-              back for counter-gear recommendations.
+              No gear loaded yet — click{" "}
+              <span className="font-medium text-on-surface">
+                Reset to default data
+              </span>{" "}
+              above, or paste a wiki table in the{" "}
+              <span className="font-medium text-on-surface">Import</span> tab,
+              then come back for counter-gear.
             </p>
           ) : result && !result.ok ? (
             <p className="rounded-card border border-warning/60 bg-surface p-4 text-small text-on-surface">
