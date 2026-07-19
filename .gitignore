@@ -16,3 +16,6 @@ dist-ssr
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local session notes (not part of the project)
+SESSION_HANDOFF.md
