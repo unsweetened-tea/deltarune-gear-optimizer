@@ -89,8 +89,8 @@ function App() {
     <div className="min-h-screen bg-void text-on-void">
       <header className="sticky top-0 z-30 border-b border-border bg-void">
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-          <span className="font-display text-h2 text-on-void">
-            Deltarune Gear Optimizer
+          <span className="font-display text-h2 text-on-void sm:text-h1">
+            Deltarune Gear Optimizer (Beta)
           </span>
           <PrimaryNav
             sections={visibleTabs}
