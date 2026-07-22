@@ -27,12 +27,17 @@ const TAB_IDS: Tab[] = [
   "about",
 ]
 
-/** URL segment ⇄ Optimize sub-tab, so "counter a boss" is deep-linkable. */
-const CATEGORY_SEGMENTS: Record<string, PresetCategory> = {
-  playstyle: "playstyle",
-  stat: "stat",
-  bosses: "boss",
-}
+/**
+ * URL segment ⇄ Optimize sub-tab, so "counter a boss" is deep-linkable.
+ * A Map, not an object: the segment comes from the URL, and an object
+ * lookup would resolve inherited keys ("constructor", "toString") to
+ * something that is not a PresetCategory at all.
+ */
+const CATEGORY_SEGMENTS = new Map<string, PresetCategory>([
+  ["playstyle", "playstyle"],
+  ["stat", "stat"],
+  ["bosses", "boss"],
+])
 
 const SEGMENT_BY_CATEGORY: Record<PresetCategory, string> = {
   playstyle: "playstyle",
@@ -59,7 +64,7 @@ export function parseRoute(hash: string): Route {
   return {
     tab,
     optimizeCategory:
-      (rawSub && CATEGORY_SEGMENTS[rawSub]) || HOME_ROUTE.optimizeCategory,
+      (rawSub && CATEGORY_SEGMENTS.get(rawSub)) || HOME_ROUTE.optimizeCategory,
   }
 }
 

@@ -27,6 +27,13 @@ describe("parseRoute", () => {
     expect(parseRoute("#/optimize/bogus").optimizeCategory).toBe("playstyle")
   })
 
+  it("does not resolve inherited object keys from the URL", () => {
+    for (const key of ["constructor", "toString", "__proto__", "valueOf"]) {
+      expect(parseRoute(`#/optimize/${key}`).optimizeCategory).toBe("playstyle")
+      expect(parseRoute(`#/${key}`)).toEqual(HOME_ROUTE)
+    }
+  })
+
   it("deep-links the Optimize sub-tabs", () => {
     expect(parseRoute("#/optimize/bosses").optimizeCategory).toBe("boss")
     expect(parseRoute("#/optimize/stat").optimizeCategory).toBe("stat")

@@ -188,7 +188,13 @@ function App() {
           )}
           {tab === "about" && <AboutScreen onNavigate={navigate} />}
           {tab === "optimize" && (
-            <OptimizeScreen initialCategory={route.optimizeCategory} />
+            // Keyed so a sub-tab deep link re-applies while Optimize is
+            // already open; clicking the sub-tabs doesn't touch the hash,
+            // so in-screen switching keeps its state as before.
+            <OptimizeScreen
+              key={route.optimizeCategory}
+              initialCategory={route.optimizeCategory}
+            />
           )}
           {tab === "solo" && <OptimizerPanel />}
           {tab === "import" && <ImportPanel />}
