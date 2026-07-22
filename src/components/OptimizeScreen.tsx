@@ -8,7 +8,7 @@ import type {
 } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
 import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
-import { optimizeParty } from "../lib/partyOptimizer"
+import { optimizeParty, type MemberAssignment } from "../lib/partyOptimizer"
 import { toPartyObjective } from "../lib/presets"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { BossPanel } from "./BossPanel"
@@ -33,6 +33,14 @@ const CATEGORIES: { id: PresetCategory; label: string }[] = [
 
 function objectiveLabel(objective: PresetObjective): string {
   return objective === "weightedSum" ? "Weighted sum" : "Maximin"
+}
+
+/** The beneficiary/tiebreak explanation for one equipped item, if any. */
+function noteFor(
+  assignment: MemberAssignment,
+  itemId: string,
+): string | undefined {
+  return assignment.itemNotes.find((n) => n.itemId === itemId)?.text
 }
 
 function WeightChips({ weights }: { weights: Stats }) {
@@ -255,6 +263,15 @@ export function OptimizeScreen({
         </label>
       </div>
 
+      <p className="text-small text-text-muted">
+        Items whose chapter is unknown (
+        <span className="font-mono text-on-void">?</span> in the gear table) are
+        treated as available in every chapter. The highest enabled chapter also
+        stands in for your story progress, which is what unlocks per-character
+        gates like{" "}
+        <span className="font-medium text-on-void">Susie ch5</span>.
+      </p>
+
       <RecentlyUnavailable
         entries={recentlyUnavailable}
         onUndo={undoUnavailable}
@@ -337,10 +354,17 @@ export function OptimizeScreen({
                     </span>
                   </div>
 
+                  {a.memberNotes.map((note) => (
+                    <p key={note} className="text-small text-text-muted">
+                      {note}
+                    </p>
+                  ))}
+
                   <div className="space-y-2">
                     <SlotRow
                       slotLabel="Weapon"
                       item={a.weapon}
+                      note={noteFor(a, a.weapon.id)}
                       actions={
                         <>
                           <RemoveButton
@@ -358,6 +382,7 @@ export function OptimizeScreen({
                         key={i}
                         slotLabel="Armor"
                         item={piece}
+                        note={noteFor(a, piece.id)}
                         actions={
                           <>
                             <RemoveButton

@@ -8,6 +8,11 @@ export interface Stats {
 export interface Ability {
   name: string
   description: string
+  /**
+   * Character ids the ability actually helps. Absent or empty = helps
+   * anyone. Never scored: it only breaks ties between equal loadouts.
+   */
+  beneficiaries?: string[]
 }
 
 export type ItemType = "weapon" | "armor"
@@ -26,6 +31,19 @@ export interface Resistance {
   chapterOverrides?: Record<number, number>
 }
 
+/**
+ * A story-progress restriction: the listed characters cannot equip the
+ * item until the run has reached `fromChapter` (the highest enabled
+ * chapter stands in for "how far you are"). Data-driven — the
+ * optimizers read this field and know nothing about specific items.
+ */
+export interface ChapterGate {
+  characterIds: string[]
+  fromChapter: 1 | 2 | 3 | 4 | 5
+  /** Shown verbatim in the UI, e.g. "partway through Chapter 5". */
+  note?: string
+}
+
 export interface Item {
   id: string
   name: string
@@ -42,6 +60,8 @@ export interface Item {
   resistances?: Resistance[]
   /** Never a candidate in ANY optimizer, regardless of owned — for joke/unused gear that breaks the math. */
   excludeFromOptimizer?: boolean
+  /** Per-character story gates, e.g. "Susie can't wear ribbons until Ch5". */
+  chapterGates?: ChapterGate[]
 }
 
 export interface CharacterSlots {
@@ -57,6 +77,13 @@ export interface Character {
   slots: CharacterSlots
   armorRemovable: boolean
   active: boolean
+  /**
+   * How much each stat actually matters for this character, multiplied
+   * into whatever the objective asks for (character weight × objective
+   * weight). 1 = normal, 0 = this stat contributes nothing for them.
+   * Defaults to all 1s — the app makes no assumption about who uses what.
+   */
+  statWeights: Stats
 }
 
 export type InventoryMode = "owned" | "unlimited"

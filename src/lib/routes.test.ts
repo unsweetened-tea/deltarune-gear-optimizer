@@ -40,6 +40,16 @@ describe("parseRoute", () => {
   })
 })
 
+describe("dev-only routes", () => {
+  it("registers the Style screen only while developing", () => {
+    expect(parseRoute("#/style", { allowDevOnly: true }).tab).toBe("style")
+  })
+
+  it("falls through to Home in a production build", () => {
+    expect(parseRoute("#/style", { allowDevOnly: false })).toEqual(HOME_ROUTE)
+  })
+})
+
 describe("routeHref", () => {
   it("round-trips through parseRoute", () => {
     expect(parseRoute(routeHref("home"))).toEqual(HOME_ROUTE)

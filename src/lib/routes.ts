@@ -28,6 +28,17 @@ const TAB_IDS: Tab[] = [
 ]
 
 /**
+ * Screens that exist only while developing. Their route is not
+ * registered in a production build, so the URL falls through to Home
+ * exactly like any other unknown hash — there is nothing to find.
+ */
+const DEV_ONLY_TABS = new Set<Tab>(["style"])
+
+export function isDevOnlyTab(tab: Tab): boolean {
+  return DEV_ONLY_TABS.has(tab)
+}
+
+/**
  * URL segment ⇄ Optimize sub-tab, so "counter a boss" is deep-linkable.
  * A Map, not an object: the segment comes from the URL, and an object
  * lookup would resolve inherited keys ("constructor", "toString") to
@@ -52,7 +63,10 @@ export const HOME_ROUTE: Route = { tab: "home", optimizeCategory: "playstyle" }
  * a server-side SPA fallback. "/" — i.e. no hash — is Home; anything
  * unrecognized also lands on Home rather than a dead screen.
  */
-export function parseRoute(hash: string): Route {
+export function parseRoute(
+  hash: string,
+  { allowDevOnly = import.meta.env.DEV }: { allowDevOnly?: boolean } = {},
+): Route {
   const [rawTab, rawSub] = hash
     .replace(/^#/, "")
     .replace(/^\//, "")
@@ -60,6 +74,7 @@ export function parseRoute(hash: string): Route {
 
   const tab = TAB_IDS.find((id) => id === rawTab)
   if (!tab) return HOME_ROUTE
+  if (isDevOnlyTab(tab) && !allowDevOnly) return HOME_ROUTE
 
   return {
     tab,

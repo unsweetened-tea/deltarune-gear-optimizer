@@ -2,6 +2,7 @@ import type {
   Ability,
   Boss,
   BossSpecialRule,
+  ChapterGate,
   Character,
   Dataset,
   DatasetSettings,
@@ -11,6 +12,7 @@ import type {
   Stats,
 } from "../types/data"
 import { DATASET_VERSION, ensureBuiltinPresets } from "./presets"
+import { applySeedChapterGates } from "./seedChapterGates"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -34,7 +36,18 @@ function isAbility(value: unknown): value is Ability {
   return (
     isRecord(value) &&
     typeof value.name === "string" &&
-    typeof value.description === "string"
+    typeof value.description === "string" &&
+    (value.beneficiaries === undefined || isStringArray(value.beneficiaries))
+  )
+}
+
+function isChapterGate(value: unknown): value is ChapterGate {
+  return (
+    isRecord(value) &&
+    isStringArray(value.characterIds) &&
+    typeof value.fromChapter === "number" &&
+    [1, 2, 3, 4, 5].includes(value.fromChapter) &&
+    (value.note === undefined || typeof value.note === "string")
   )
 }
 
@@ -79,7 +92,10 @@ function isItem(value: unknown): value is Item {
       (Array.isArray(value.resistances) &&
         value.resistances.every(isResistance))) &&
     (value.excludeFromOptimizer === undefined ||
-      typeof value.excludeFromOptimizer === "boolean")
+      typeof value.excludeFromOptimizer === "boolean") &&
+    (value.chapterGates === undefined ||
+      (Array.isArray(value.chapterGates) &&
+        value.chapterGates.every(isChapterGate)))
   )
 }
 
@@ -125,8 +141,18 @@ function isCharacter(value: unknown): value is Character {
     typeof value.slots.weapon === "number" &&
     typeof value.slots.armor === "number" &&
     typeof value.armorRemovable === "boolean" &&
-    typeof value.active === "boolean"
+    typeof value.active === "boolean" &&
+    isStats(value.statWeights)
   )
+}
+
+/** Pre-v4 characters have no relevance weights; every stat starts at 1. */
+export const DEFAULT_STAT_WEIGHTS: Stats = { hp: 1, atk: 1, def: 1, magic: 1 }
+
+function normalizeRawCharacter(value: unknown): unknown {
+  if (!isRecord(value)) return value
+  if (isStats(value.statWeights)) return value
+  return { ...value, statWeights: { ...DEFAULT_STAT_WEIGHTS } }
 }
 
 function isPreset(value: unknown): value is Preset {
@@ -176,16 +202,20 @@ function normalizeRawItem(value: unknown): unknown {
  * normalized current-version Dataset, or null if the shape is wrong.
  * Older versions are accepted and migrated: missing `presets` (v1)
  * becomes the built-in set (missing built-ins are re-added without
- * touching user presets), and missing `bosses` (v1/v2) becomes [].
+ * touching user presets), missing `bosses` (v1/v2) becomes [], and
+ * pre-v4 data gains per-character stat weights of 1 plus the seed
+ * chapter gates (both no-ops for behaviour until edited).
  */
 export function parseDataset(value: unknown): Dataset | null {
   if (!isRecord(value)) return null
   if (typeof value.version !== "number") return null
-  if (!Array.isArray(value.characters) || !value.characters.every(isCharacter))
-    return null
+  if (!Array.isArray(value.characters)) return null
+  const characters = value.characters.map(normalizeRawCharacter)
+  if (!characters.every(isCharacter)) return null
   if (!Array.isArray(value.items)) return null
-  const items = value.items.map(normalizeRawItem)
-  if (!items.every(isItem)) return null
+  const rawItems = value.items.map(normalizeRawItem)
+  if (!rawItems.every(isItem)) return null
+  const items = value.version < 4 ? applySeedChapterGates(rawItems) : rawItems
   if (!isSettings(value.settings)) return null
 
   let presets: Preset[]
@@ -211,7 +241,7 @@ export function parseDataset(value: unknown): Dataset | null {
 
   return {
     version: DATASET_VERSION,
-    characters: value.characters,
+    characters,
     items,
     presets: ensureBuiltinPresets(presets),
     bosses,

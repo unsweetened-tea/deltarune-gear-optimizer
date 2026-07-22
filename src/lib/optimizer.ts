@@ -11,6 +11,15 @@ export interface ScoredLoadout {
   totals: Stats
 }
 
+/**
+ * How far the run has progressed, taken as the highest enabled chapter.
+ * Chapter gates are relative to this — there is no separate "current
+ * chapter" setting to keep in sync.
+ */
+export function currentChapter(chaptersEnabled: number[]): number {
+  return chaptersEnabled.length === 0 ? 0 : Math.max(...chaptersEnabled)
+}
+
 export interface OptimizeInput {
   character: Character
   items: Item[]
@@ -28,6 +37,65 @@ export function canEquip(item: Item, character: Character): boolean {
   return (
     item.equippableBy === "all" || item.equippableBy.includes(character.id)
   )
+}
+
+/** The gate blocking this character right now, if any. */
+export function blockingChapterGate(
+  item: Item,
+  character: Character,
+  chaptersEnabled: number[],
+) {
+  const reached = currentChapter(chaptersEnabled)
+  return (item.chapterGates ?? []).find(
+    (gate) =>
+      gate.characterIds.includes(character.id) && reached < gate.fromChapter,
+  )
+}
+
+/** canEquip plus story gates — who may wear this at the current progress. */
+export function canEquipNow(
+  item: Item,
+  character: Character,
+  chaptersEnabled: number[],
+): boolean {
+  if (!canEquip(item, character)) return false
+  return blockingChapterGate(item, character, chaptersEnabled) === undefined
+}
+
+/**
+ * The single gate every optimizer must pass an item through: equip
+ * legality, story gates, permanent exclusion, chapter filter and owned
+ * count. Nothing should filter candidates by hand.
+ */
+export function isCandidateFor(
+  item: Item,
+  character: Character,
+  chaptersEnabled: number[],
+  inventoryMode: InventoryMode,
+): boolean {
+  return (
+    canEquipNow(item, character, chaptersEnabled) &&
+    isAvailable(item, chaptersEnabled, inventoryMode)
+  )
+}
+
+/**
+ * Loadout preference for ability beneficiaries: +1 for each equipped
+ * ability item this character is listed on, -1 for each one they hold
+ * despite not being listed. Items with no beneficiary list score 0.
+ * This is NEVER added to the stat score — it only orders ties.
+ */
+export function beneficiaryScore(
+  character: Character,
+  equipped: Item[],
+): number {
+  let score = 0
+  for (const item of equipped) {
+    const list = item.ability?.beneficiaries
+    if (!list || list.length === 0) continue
+    score += list.includes(character.id) ? 1 : -1
+  }
+  return score
 }
 
 export function isAvailable(
@@ -96,10 +164,8 @@ export function optimize(input: OptimizeInput): OptimizeResult {
   const { character, items, targetStat, chaptersEnabled, inventoryMode } =
     input
 
-  const eligible = items.filter(
-    (it) =>
-      canEquip(it, character) &&
-      isAvailable(it, chaptersEnabled, inventoryMode),
+  const eligible = items.filter((it) =>
+    isCandidateFor(it, character, chaptersEnabled, inventoryMode),
   )
   const weapons = eligible.filter((it) => it.type === "weapon")
   const armorCandidates = eligible.filter((it) => it.type === "armor")
@@ -137,6 +203,20 @@ export function optimize(input: OptimizeInput): OptimizeResult {
     }
   }
 
-  loadouts.sort((a, b) => b.totals[targetStat] - a.totals[targetStat])
+  // The character's own relevance weight scales the target stat: at 0 the
+  // stat contributes nothing and every loadout ties, which the panel says
+  // out loud rather than presenting an arbitrary winner as "best".
+  const relevance = character.statWeights[targetStat]
+  loadouts.sort((a, b) => {
+    const delta =
+      b.totals[targetStat] * relevance - a.totals[targetStat] * relevance
+    if (delta !== 0) return delta
+    // Equal on the stat: prefer the loadout whose ability items are held
+    // by a listed beneficiary. Abilities themselves stay unscored.
+    return (
+      beneficiaryScore(character, [b.weapon, ...b.armor]) -
+      beneficiaryScore(character, [a.weapon, ...a.armor])
+    )
+  })
   return { ok: true, loadouts }
 }

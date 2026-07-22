@@ -16,6 +16,7 @@ function makeCharacter(
     slots: { weapon: 1, armor: 2 },
     armorRemovable: true,
     active: true,
+    statWeights: { hp: 1, atk: 1, def: 1, magic: 1 },
     ...overrides,
   }
 }

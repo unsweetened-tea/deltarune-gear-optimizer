@@ -7,6 +7,8 @@ const STORAGE_KEY = "deltarune-optimizer:dataset"
 /** Raw version of the bundled seed the saved data was last initialized/reset from. */
 const SEED_VERSION_KEY = "deltarune-optimizer:seed-version"
 const SEED_NOTE_DISMISSED_KEY = "deltarune-optimizer:seed-note-dismissed"
+/** Last saved data that failed to parse, kept so a bad load can't destroy it. */
+export const RESCUE_KEY = "deltarune-optimizer:unreadable-backup"
 
 /** Raw data version declared by the bundled seed file (independent of schema version). */
 export const bundledSeedVersion: number =
@@ -60,9 +62,24 @@ export function loadDataset(): Dataset {
   }
 
   try {
-    return parseDataset(JSON.parse(raw)) ?? createDefaultDataset()
+    const parsed = parseDataset(JSON.parse(raw))
+    if (parsed) return parsed
   } catch {
-    return createDefaultDataset()
+    // fall through to the same rescue path as a structurally invalid save
+  }
+
+  // Unreadable save: the empty default returned here is about to be
+  // persisted over it, so stash the original first. Nothing else reads
+  // this key — it exists so a bad load is recoverable by hand.
+  rescueUnreadable(raw)
+  return createDefaultDataset()
+}
+
+function rescueUnreadable(raw: string): void {
+  try {
+    localStorage.setItem(RESCUE_KEY, raw)
+  } catch {
+    // Quota or private-mode failure — nothing more we can do here.
   }
 }
 

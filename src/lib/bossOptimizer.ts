@@ -7,12 +7,14 @@ import type {
   Stats,
 } from "../types/data"
 import {
-  canEquip,
+  canEquipNow,
   enumerateArmorSelections,
   isAvailable,
+  isCandidateFor,
   totalStats,
 } from "./optimizer"
 import {
+  improveBeneficiaryFit,
   loadoutUsage,
   solvePool,
   type BlockedMember,
@@ -172,8 +174,13 @@ function evaluateLoadout(
     damageMultiplier
   const pool = Math.max(1, BASE_HP_POOL + totals.hp)
   const threat = perHit / pool
+  // Character stat relevance applies to the ATK tiebreak only. HP and DEF
+  // are not preferences here — they are inputs to a damage model, and
+  // scaling them would report damage numbers the model doesn't predict.
   const atkBonus =
-    boss.winCondition === "fight" ? ATK_TIEBREAK * totals.atk : 0
+    boss.winCondition === "fight"
+      ? ATK_TIEBREAK * totals.atk * character.statWeights.atk
+      : 0
   return {
     weapon,
     armor,
@@ -192,10 +199,8 @@ function enumerateBossLoadouts(
   chaptersEnabled: number[],
   inventoryMode: InventoryMode,
 ): EvaluatedLoadout[] {
-  const eligible = items.filter(
-    (it) =>
-      canEquip(it, character) &&
-      isAvailable(it, chaptersEnabled, inventoryMode),
+  const eligible = items.filter((it) =>
+    isCandidateFor(it, character, chaptersEnabled, inventoryMode),
   )
   const weapons = eligible.filter((it) => it.type === "weapon")
   const armorCandidates = eligible.filter((it) => it.type === "armor")
@@ -279,10 +284,8 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
   const blocked: BlockedMember[] = []
   const equippableParty: typeof party = []
   for (const character of party) {
-    const eligible = items.filter(
-      (it) =>
-        canEquip(it, character) &&
-        isAvailable(it, chaptersEnabled, inventoryMode),
+    const eligible = items.filter((it) =>
+      isCandidateFor(it, character, chaptersEnabled, inventoryMode),
     )
     if (!eligible.some((it) => it.type === "weapon")) {
       blocked.push({
@@ -338,6 +341,14 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
       ]),
     )
   } else {
+    // Abilities are unscored here too — beneficiaries only break ties.
+    const tiebreakInPlay = memberLoadouts.some(({ loadouts }) =>
+      loadouts.some((l) =>
+        [l.weapon, ...l.armor].some(
+          (it) => (it.ability?.beneficiaries ?? []).length > 0,
+        ),
+      ),
+    )
     const ordered: SearchMember[] = memberLoadouts
       .map(({ character, loadouts }) => ({
         character,
@@ -359,10 +370,15 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
           "The owned pool cannot equip every party member at once. Add owned counts or switch to unlimited mode.",
       }
     }
+    // Equal-threat swaps only — abilities never change the damage math.
+    const picks = tiebreakInPlay
+      ? improveBeneficiaryFit(ordered, solution.picks, inventory)
+      : solution.picks
+
     picksByCharacter = new Map(
       ordered.map((m, i) => [
         m.character.id,
-        m.loadouts[solution.picks[i]] as EvaluatedLoadout,
+        m.loadouts[picks[i]] as EvaluatedLoadout,
       ]),
     )
   }
@@ -402,29 +418,49 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
     (it) =>
       it.type === "armor" &&
       isAvailable(it, chaptersEnabled, inventoryMode) &&
-      party.some((c) => canEquip(it, c)),
+      party.some((c) => canEquipNow(it, c, chaptersEnabled)),
   )
   for (const item of candidateItems) {
     const wearer = assignments.find((a) =>
       a.armor.some((piece) => piece.id === item.id),
     )
+    const beneficiaries = item.ability?.beneficiaries ?? []
+    const beneficiaryNames = beneficiaries.map(
+      (id) => party.find((c) => c.id === id)?.name ?? id,
+    )
+
     if (wearer) {
+      const reasons = [
+        ...new Set(
+          wearer.why.filter((w) => w.itemName === item.name).map((w) => w.text),
+        ),
+      ]
+      if (beneficiaries.length > 0) {
+        reasons.push(
+          beneficiaries.includes(wearer.character.id)
+            ? `its ability benefits ${wearer.character.name}, which broke the tie in their favour`
+            : `its ability doesn't benefit ${wearer.character.name} — no equal-scoring alternative was free`,
+        )
+      }
       verdicts.push({
         item,
         used: true,
         usedBy: wearer.character.name,
-        reasons: [
-          ...new Set(
-            wearer.why
-              .filter((w) => w.itemName === item.name)
-              .map((w) => w.text),
-          ),
-        ],
+        reasons,
       })
       continue
     }
 
     const reasons: string[] = []
+
+    // Held back and appended after the stat reasons, so it supplements
+    // them rather than suppressing the "no relevant resistance" line.
+    const beneficiaryReason =
+      beneficiaries.length === 0
+        ? null
+        : beneficiaries.some((id) => party.some((c) => c.id === id))
+          ? `its ability benefits ${beneficiaryNames.join(", ")}, but abilities are never scored — it lost on stats, not on the tiebreak`
+          : `its ability only benefits ${beneficiaryNames.join(", ")}, who isn't in this party`
 
     // Does it resist anything this boss actually uses?
     const matching = ELEMENTS.filter(
@@ -454,7 +490,7 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
     // Best-case swap onto the member it suits best, holding others fixed.
     let bestDelta: { member: string; pctWorse: number } | null = null
     for (const { character, loadouts } of memberLoadouts) {
-      if (!canEquip(item, character)) continue
+      if (!canEquipNow(item, character, chaptersEnabled)) continue
       const assigned = picksByCharacter.get(character.id)
       if (!assigned) continue
       const withItem = loadouts.find((l) =>
@@ -490,6 +526,8 @@ export function optimizeVsBoss(input: BossOptimizeInput): BossOptimizeResult {
           : ""
       reasons.push(`no relevant resistance${deltaText}`)
     }
+
+    if (beneficiaryReason) reasons.push(beneficiaryReason)
 
     verdicts.push({ item, used: false, reasons })
   }

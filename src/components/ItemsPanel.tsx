@@ -8,6 +8,11 @@ import {
   parseEquippableBy,
   parseIdList,
 } from "../lib/characterRefs"
+import {
+  formatChapterGates,
+  parseChapterGates,
+  preserveGateNotes,
+} from "../lib/chapterGateFormat"
 import { formatResistances, parseResistances } from "../lib/resistanceFormat"
 import { STAT_INPUT_CLASS } from "../lib/statColors"
 import { Button } from "./ui/Button"
@@ -198,6 +203,17 @@ export function ItemsPanel() {
         )}
       </p>
 
+      <p className="text-small text-text-muted">
+        Chapter{" "}
+        <span className="font-mono text-on-void">?</span> means unknown — those
+        items are treated as available in{" "}
+        <span className="font-medium text-on-void">every</span> chapter, so they
+        always reach the optimizer.{" "}
+        <span className="font-medium text-on-void">Locked Until</span> blocks
+        only the named characters until that chapter is reached; the highest
+        enabled chapter counts as how far you are.
+      </p>
+
       {filteredItems.length === 0 ? (
         <Card className="text-center text-small text-text-muted">
           {dataset.items.length === 0 ? (
@@ -259,6 +275,20 @@ export function ItemsPanel() {
                 </th>
                 <th scope="col" className={headCell}>
                   Ability Desc.
+                </th>
+                <th
+                  scope="col"
+                  className={headCell}
+                  title="Characters the ability actually helps. Blank = helps anyone. Never scored — only breaks ties between equal loadouts."
+                >
+                  Ability Benefits
+                </th>
+                <th
+                  scope="col"
+                  className={headCell}
+                  title="Story gate: these characters can't equip it until the chapter given, e.g. “Susie ch5”."
+                >
+                  Locked Until
                 </th>
                 <th scope="col" className={numHeadCell}>
                   Owned
@@ -420,6 +450,52 @@ export function ItemsPanel() {
                       }
                       aria-label={`${item.name} ability description`}
                       className="w-48"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      key={`${item.id}-beneficiaries`}
+                      defaultValue={formatIdList(
+                        item.ability?.beneficiaries ?? [],
+                        dataset.characters,
+                      )}
+                      onBlur={(e) =>
+                        updateItemAbility(item.id, {
+                          beneficiaries: parseIdList(
+                            e.target.value,
+                            dataset.characters,
+                          ),
+                        })
+                      }
+                      placeholder="anyone"
+                      aria-label={`${item.name} ability beneficiaries`}
+                      className="w-32"
+                    />
+                  </td>
+                  <td className={cell}>
+                    <TextInput
+                      key={`${item.id}-gates`}
+                      defaultValue={formatChapterGates(
+                        item.chapterGates,
+                        dataset.characters,
+                      )}
+                      onBlur={(e) =>
+                        updateItem(item.id, {
+                          chapterGates: preserveGateNotes(
+                            parseChapterGates(
+                              e.target.value,
+                              dataset.characters,
+                            ),
+                            item.chapterGates,
+                          ),
+                        })
+                      }
+                      placeholder="Susie ch5"
+                      aria-label={`${item.name} chapter gates`}
+                      className="w-32"
+                      title={
+                        item.chapterGates?.find((g) => g.note)?.note ?? undefined
+                      }
                     />
                   </td>
                   <td className={cell}>

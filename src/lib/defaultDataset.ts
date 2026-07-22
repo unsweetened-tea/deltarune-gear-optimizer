@@ -3,6 +3,9 @@ import { builtinPresets, DATASET_VERSION } from "./presets"
 
 const zeroStats = { hp: 0, atk: 0, def: 0, magic: 0 }
 
+/** Every stat matters equally until the user says otherwise. */
+const unitWeights = { hp: 1, atk: 1, def: 1, magic: 1 }
+
 const starterCharacters: Character[] = [
   {
     id: "kris",
@@ -12,6 +15,7 @@ const starterCharacters: Character[] = [
     slots: { weapon: 1, armor: 2 },
     armorRemovable: true,
     active: true,
+    statWeights: { ...unitWeights },
   },
   {
     id: "susie",
@@ -21,6 +25,7 @@ const starterCharacters: Character[] = [
     slots: { weapon: 1, armor: 2 },
     armorRemovable: false,
     active: true,
+    statWeights: { ...unitWeights },
   },
   {
     id: "ralsei",
@@ -30,6 +35,7 @@ const starterCharacters: Character[] = [
     slots: { weapon: 1, armor: 2 },
     armorRemovable: true,
     active: true,
+    statWeights: { ...unitWeights },
   },
   {
     id: "noelle",
@@ -39,6 +45,7 @@ const starterCharacters: Character[] = [
     slots: { weapon: 1, armor: 2 },
     armorRemovable: true,
     active: false,
+    statWeights: { ...unitWeights },
   },
 ]
 

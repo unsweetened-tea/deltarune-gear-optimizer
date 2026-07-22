@@ -1,7 +1,7 @@
 import type { Dataset, Preset, PresetObjective } from "../types/data"
 import type { PartyObjective } from "./partyOptimizer"
 
-export const DATASET_VERSION = 3
+export const DATASET_VERSION = 4
 
 export function builtinPresets(): Preset[] {
   return [

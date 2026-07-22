@@ -53,12 +53,13 @@ function App() {
     )
   })
 
+  // Dev-only screens are registered in neither the nav nor the router
+  // (parseRoute drops them), so in production there is nothing to link to
+  // and nothing a hand-typed URL can reach.
   const visibleTabs = TABS.filter(
     (t) => !t.unlisted && (!t.devOnly || import.meta.env.DEV),
   )
-  // The dev-only Style screen must not be reachable by hash in a prod build.
-  const tab: Tab =
-    route.tab === "style" && !import.meta.env.DEV ? "home" : route.tab
+  const tab: Tab = route.tab
   const currentLabel = TABS.find((t) => t.id === tab)?.label ?? "Home"
 
   const handleImportClick = () => {
@@ -200,7 +201,7 @@ function App() {
           {tab === "import" && <ImportPanel />}
           {tab === "items" && <ItemsPanel />}
           {tab === "characters" && <CharactersPanel />}
-          {tab === "style" && <StylePanel />}
+          {tab === "style" && import.meta.env.DEV && <StylePanel />}
         </main>
       </div>
     </div>

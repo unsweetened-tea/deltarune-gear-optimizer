@@ -125,6 +125,102 @@ describe("parseDataset migration", () => {
   })
 })
 
+describe("v4 migration: stat weights and chapter gates", () => {
+  it("gives pre-v4 characters a neutral weight of 1 for every stat", () => {
+    const result = parseDataset(v1Dataset)
+    expect(result?.characters[0].statWeights).toEqual({
+      hp: 1,
+      atk: 1,
+      def: 1,
+      magic: 1,
+    })
+  })
+
+  it("keeps stat weights the user already set", () => {
+    const weights = { hp: 0, atk: 2, def: 1, magic: 0 }
+    const result = parseDataset({
+      ...v1Dataset,
+      characters: [{ ...v1Dataset.characters[0], statWeights: weights }],
+    })
+    expect(result?.characters[0].statWeights).toEqual(weights)
+  })
+
+  it("seeds the ribbon chapter gates when migrating, not on current data", () => {
+    const ribbon = {
+      id: "monarchrbn",
+      name: "MonarchRBN",
+      type: "armor",
+      chapter: 5,
+      stats: { hp: 0, atk: 0, def: 1, magic: 0 },
+      equippableBy: "all",
+      excludedFrom: [],
+      owned: 1,
+    }
+
+    const migrated = parseDataset({ ...v1Dataset, items: [ribbon] })
+    const gate = migrated?.items[0].chapterGates?.[0]
+    expect(gate?.characterIds).toEqual(["susie"])
+    expect(gate?.fromChapter).toBe(5)
+
+    // Already on v4: the user's own edit (here, no gates) is authoritative.
+    const current = parseDataset({
+      ...v1Dataset,
+      version: DATASET_VERSION,
+      items: [ribbon],
+    })
+    expect(current?.items[0].chapterGates).toBeUndefined()
+  })
+
+  it("round-trips beneficiaries and gates through export/import", () => {
+    const dataset = {
+      ...v1Dataset,
+      version: DATASET_VERSION,
+      characters: [
+        {
+          ...v1Dataset.characters[0],
+          statWeights: { hp: 3, atk: 0, def: 1, magic: 1 },
+        },
+      ],
+      items: [
+        {
+          ...v1Dataset.items[0],
+          ability: {
+            name: "HasAntenna",
+            description: "Healing up.",
+            beneficiaries: ["ralsei"],
+          },
+          chapterGates: [
+            { characterIds: ["susie"], fromChapter: 5, note: "Ch5 only" },
+          ],
+        },
+      ],
+    }
+    const round = parseDataset(JSON.parse(JSON.stringify(dataset)))
+    expect(round?.items[0].ability?.beneficiaries).toEqual(["ralsei"])
+    expect(round?.items[0].chapterGates).toEqual(dataset.items[0].chapterGates)
+    expect(round?.characters[0].statWeights).toEqual({
+      hp: 3,
+      atk: 0,
+      def: 1,
+      magic: 1,
+    })
+  })
+
+  it("rejects a malformed beneficiaries list rather than guessing", () => {
+    expect(
+      parseDataset({
+        ...v1Dataset,
+        items: [
+          {
+            ...v1Dataset.items[0],
+            ability: { name: "x", description: "y", beneficiaries: [1, 2] },
+          },
+        ],
+      }),
+    ).toBeNull()
+  })
+})
+
 describe("bundled seed dataset (src/data/gearData.json)", () => {
   it("parses, migrates, and keeps every item including unknown-chapter ones", async () => {
     const { default: gearData } = await import("../data/gearData.json")

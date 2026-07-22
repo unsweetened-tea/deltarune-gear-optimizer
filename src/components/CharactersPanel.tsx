@@ -32,6 +32,17 @@ export function CharactersPanel() {
     }))
   }
 
+  function updateStatWeight(id: string, key: keyof Stats, value: number) {
+    setDataset((prev) => ({
+      ...prev,
+      characters: prev.characters.map((c) =>
+        c.id === id
+          ? { ...c, statWeights: { ...c.statWeights, [key]: value } }
+          : c,
+      ),
+    }))
+  }
+
   function updateCharacterSlots(
     id: string,
     key: keyof CharacterSlots,
@@ -121,6 +132,48 @@ export function CharactersPanel() {
                   />
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* Stat relevance weights */}
+          <div>
+            <div className="mb-1.5 text-small font-medium text-text-muted">
+              Stat relevance{" "}
+              <span className="font-normal">
+                — multiplied into the objective&apos;s weights for this
+                character. 1 = normal, 0 = this stat never counts for them.
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {STAT_KEYS.map((stat) => {
+                const value = character.statWeights[stat]
+                return (
+                  <label key={stat} className="flex flex-col gap-1">
+                    <span
+                      className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
+                    >
+                      {stat} ×
+                    </span>
+                    <NumberInput
+                      min={0}
+                      step={0.5}
+                      value={value}
+                      onChange={(e) =>
+                        updateStatWeight(
+                          character.id,
+                          stat,
+                          e.target.value === "" ? 0 : Number(e.target.value),
+                        )
+                      }
+                      aria-label={`${character.name} ${stat.toUpperCase()} relevance weight`}
+                      className={`w-20 text-right ${STAT_INPUT_CLASS[stat]}`}
+                    />
+                    {value === 0 && (
+                      <span className="text-small text-warning">ignored</span>
+                    )}
+                  </label>
+                )
+              })}
             </div>
           </div>
 
