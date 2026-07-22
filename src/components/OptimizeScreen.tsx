@@ -47,9 +47,15 @@ function WeightChips({ weights }: { weights: Stats }) {
   )
 }
 
-export function OptimizeScreen() {
+export function OptimizeScreen({
+  /** Which sub-tab to open on entry — set by the route, e.g. Home's
+   *  "Counter a boss". Behaviour is unchanged when it is omitted. */
+  initialCategory = "playstyle",
+}: {
+  initialCategory?: PresetCategory
+}) {
   const { dataset, setDataset } = useDataset()
-  const [category, setCategory] = useState<PresetCategory>("playstyle")
+  const [category, setCategory] = useState<PresetCategory>(initialCategory)
   const [selectedByCategory, setSelectedByCategory] = useState<
     Record<PresetCategory, string | null>
   >({ playstyle: "playstyle-balanced", stat: "stat-hp", boss: null })
