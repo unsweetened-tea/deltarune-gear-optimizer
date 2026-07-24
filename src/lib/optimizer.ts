@@ -2,8 +2,10 @@ import type {
   Character,
   InventoryMode,
   Item,
+  MoneySettings,
   Stats,
 } from "../types/data"
+import { memberMoneyScore } from "./money"
 
 export interface ScoredLoadout {
   weapon: Item
@@ -26,6 +28,8 @@ export interface OptimizeInput {
   targetStat: keyof Stats
   chaptersEnabled: number[]
   inventoryMode: InventoryMode
+  /** When set, maximize this character's money instead of a combat stat. */
+  money?: MoneySettings
 }
 
 export type OptimizeResult =
@@ -161,7 +165,7 @@ export function totalStats(character: Character, equipped: Item[]): Stats {
 }
 
 export function optimize(input: OptimizeInput): OptimizeResult {
-  const { character, items, targetStat, chaptersEnabled, inventoryMode } =
+  const { character, items, targetStat, chaptersEnabled, inventoryMode, money } =
     input
 
   const eligible = items.filter((it) =>
@@ -201,6 +205,18 @@ export function optimize(input: OptimizeInput): OptimizeResult {
         totals: totalStats(character, [weapon, ...armor]),
       })
     }
+  }
+
+  // In money mode the target stat is ignored; loadouts are ranked purely
+  // by how much money they earn this character. Additive scoring means a
+  // negative item only wins a slot with no non-negative option (guardrail).
+  if (money) {
+    loadouts.sort(
+      (a, b) =>
+        memberMoneyScore([b.weapon, ...b.armor]) -
+        memberMoneyScore([a.weapon, ...a.armor]),
+    )
+    return { ok: true, loadouts }
   }
 
   // The character's own relevance weight scales the target stat: at 0 the

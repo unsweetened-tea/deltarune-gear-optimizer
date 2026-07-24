@@ -211,7 +211,7 @@
       "id": "winglade",
       "name": "Winglade",
       "type": "weapon",
-      "chapter": null,
+      "chapter": 4,
       "stats": {
         "hp": 0,
         "atk": 8,
@@ -226,8 +226,9 @@
         "name": "$ +5%",
         "description": "Increases Dark Dollars earned by 5%."
       },
+      "moneyModifier": 5,
       "owned": 1,
-      "source": "Dark Sanctuary chest (Climbing Claws) — likely Ch4, VERIFY"
+      "source": "Dark Sanctuary chest (Climbing Claws), Ch4"
     },
     {
       "id": "black-shard",
@@ -270,6 +271,7 @@
         "name": "$ +5%",
         "description": "Increases Dark Dollars found by 5%."
       },
+      "moneyModifier": 5,
       "owned": 0,
       "source": "Unused",
       "excludeFromOptimizer": true
@@ -974,6 +976,7 @@
         "name": "$ +30%",
         "description": "Increases Dark Dollars earned by 30%."
       },
+      "moneyModifier": 30,
       "resistances": [
         {
           "element": "puppetCat",
@@ -1050,7 +1053,7 @@
       "id": "silver-card",
       "name": "Silver Card",
       "type": "armor",
-      "chapter": null,
+      "chapter": 4,
       "stats": {
         "hp": 0,
         "atk": 0,
@@ -1063,8 +1066,9 @@
         "name": "$ +5%",
         "description": "Increases Dark Dollars earned by 5%."
       },
+      "moneyModifier": 5,
       "owned": 1,
-      "source": "Malius — CHAPTER UNCERTAIN"
+      "source": "Malius, Ch4"
     },
     {
       "id": "twin-ribbon",
@@ -1231,6 +1235,7 @@
         "name": "$ -10%",
         "description": "Reduces Dark Dollars gained by 10%."
       },
+      "moneyModifier": -10,
       "owned": 1,
       "source": "— (unlisted)"
     },
@@ -1698,6 +1703,7 @@
         "name": "$ -90%",
         "description": "Reduces Dark Dollars earned by 90%."
       },
+      "moneyModifier": -90,
       "owned": 1,
       "source": "Fuse GoldWidow + DogDollar via Malius, Castle Town (Ch5)"
     },

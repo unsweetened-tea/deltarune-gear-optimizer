@@ -62,6 +62,13 @@ export interface Item {
   excludeFromOptimizer?: boolean
   /** Per-character story gates, e.g. "Susie can't wear ribbons until Ch5". */
   chapterGates?: ChapterGate[]
+  /**
+   * Percent change to Dark Dollars earned while equipped. Positive is a
+   * bonus, negative a penalty, absent/0 no effect. Real data behind what
+   * was previously only English in ability.description, so the money mode
+   * can read it.
+   */
+  moneyModifier?: number
 }
 
 export interface CharacterSlots {
@@ -88,6 +95,22 @@ export interface Character {
 
 export type InventoryMode = "owned" | "unlimited"
 
+/** How multiple money modifiers combine: sum the percents, or compound them. */
+export type MoneyStackMode = "additive" | "multiplicative"
+
+/**
+ * Whether every equipped money item feeds one shared party bonus
+ * ("party-wide"), or only each character's single best money item counts
+ * ("wearer-only" — a second money item on the same character does nothing).
+ * The real in-game rule is unverified, so this is a changeable assumption.
+ */
+export type MoneyScope = "wearer-only" | "party-wide"
+
+export interface MoneySettings {
+  stackMode: MoneyStackMode
+  scope: MoneyScope
+}
+
 export type PresetCategory = "playstyle" | "stat" | "boss"
 
 export type PresetObjective = "weightedSum" | "maximin"
@@ -104,6 +127,8 @@ export interface Preset {
 export interface DatasetSettings {
   chaptersEnabled: number[]
   inventoryMode: InventoryMode
+  /** Stacking assumption for money mode. Defaults to additive + party-wide. */
+  moneySettings: MoneySettings
 }
 
 export type WinCondition = "fight" | "spare" | "special"

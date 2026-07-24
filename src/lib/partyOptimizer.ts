@@ -1,10 +1,25 @@
-import type { Character, InventoryMode, Item, Stats } from "../types/data"
+import type {
+  Character,
+  InventoryMode,
+  Item,
+  MoneySettings,
+  Stats,
+} from "../types/data"
 import {
   beneficiaryScore,
   enumerateArmorSelections,
   isCandidateFor,
   totalStats,
 } from "./optimizer"
+import {
+  capMoneyFillers,
+  computePartyMoney,
+  memberMoneyScore,
+  moneyOf,
+  moneySignature,
+  type MoneyBreakdown,
+  type MoneyMember,
+} from "./money"
 
 export type PartyObjective = "sum" | "maximin"
 
@@ -47,6 +62,8 @@ export interface PartyOptimizeInput {
   objective: PartyObjective
   chaptersEnabled: number[]
   inventoryMode: InventoryMode
+  /** When set, maximize party money instead of the stat weights. */
+  money?: MoneySettings
 }
 
 export type PartyOptimizeResult =
@@ -57,6 +74,8 @@ export type PartyOptimizeResult =
       blocked: BlockedMember[]
       objectiveScore: number
       leftovers: LeftoverItem[]
+      /** Present only in money mode: the aggregated bonus and its breakdown. */
+      money?: MoneyBreakdown
     }
   | { ok: false; reason: string }
 
@@ -108,10 +127,17 @@ export function enumerateMemberLoadouts(
   weights: Stats,
   chaptersEnabled: number[],
   inventoryMode: InventoryMode,
+  money?: MoneySettings,
+  /** Money mode: max distinct zero-money fillers to keep per type. */
+  moneyFillerCap = Infinity,
 ): MemberLoadout[] {
-  const eligible = items.filter((it) =>
+  const legal = items.filter((it) =>
     isCandidateFor(it, character, chaptersEnabled, inventoryMode),
   )
+  const eligible =
+    money && Number.isFinite(moneyFillerCap)
+      ? capMoneyFillers(legal, moneyFillerCap)
+      : legal
   const weapons = eligible.filter((it) => it.type === "weapon")
   const armorCandidates = eligible.filter((it) => it.type === "armor")
 
@@ -125,7 +151,7 @@ export function enumerateMemberLoadouts(
   }
 
   const scoringWeights = effectiveWeights(character, weights)
-  const loadouts: MemberLoadout[] = []
+  let loadouts: MemberLoadout[] = []
   for (const weapon of weapons) {
     for (const armor of armorSelections) {
       const totals = totalStats(character, [weapon, ...armor])
@@ -133,10 +159,26 @@ export function enumerateMemberLoadouts(
         weapon,
         armor,
         totals,
-        score: weightedScore(totals, scoringWeights),
+        score: money
+          ? memberMoneyScore([weapon, ...armor])
+          : weightedScore(totals, scoringWeights),
       })
     }
   }
+
+  // Money mode has a near-flat objective — most loadouts carry no money
+  // gear and tie at 0 — which the branch-and-bound can't prune, so the raw
+  // list explodes combinatorially across members. Loadouts sharing a money
+  // signature earn identical money and differ only in fillers, so within
+  // each signature keep only the pool-minimal ones: a loadout is dropped if
+  // another with the same signature uses a subset of its items (same money,
+  // never more pool pressure). This is exact — any solution using the
+  // dropped loadout can use its dominator — and, with fillers already
+  // capped, leaves few loadouts per member.
+  if (money) {
+    loadouts = keepPoolMinimal(loadouts)
+  }
+
   // Equal-scoring loadouts are ordered by beneficiary fit so the greedy
   // seed and the unlimited-mode pick start from the better-explained one.
   loadouts.sort((a, b) => {
@@ -148,6 +190,52 @@ export function enumerateMemberLoadouts(
     )
   })
   return loadouts
+}
+
+/** True when `a`'s item usage is a subset-or-equal of `b`'s (a ≤ b everywhere). */
+function usageDominates(
+  a: Map<string, number>,
+  b: Map<string, number>,
+): boolean {
+  for (const [id, count] of a) {
+    if (count > (b.get(id) ?? 0)) return false
+  }
+  return true
+}
+
+/**
+ * Within each money signature, drop loadouts whose item usage is dominated
+ * by another's (same money, uses no fewer of anything). Exact for the money
+ * objective and collapses the interchangeable-filler explosion.
+ */
+function keepPoolMinimal(loadouts: MemberLoadout[]): MemberLoadout[] {
+  const groups = new Map<string, MemberLoadout[]>()
+  for (const l of loadouts) {
+    const sig = moneySignature([l.weapon, ...l.armor])
+    const group = groups.get(sig)
+    if (group) group.push(l)
+    else groups.set(sig, [l])
+  }
+
+  const kept: MemberLoadout[] = []
+  for (const group of groups.values()) {
+    const usages = group.map(loadoutUsage)
+    for (let i = 0; i < group.length; i++) {
+      let dominated = false
+      for (let j = 0; j < group.length; j++) {
+        if (i === j) continue
+        if (!usageDominates(usages[j], usages[i])) continue
+        // j ≤ i everywhere. Break ties (equal usage) by index so exactly
+        // one of an identical pair survives.
+        if (!usageDominates(usages[i], usages[j]) || j < i) {
+          dominated = true
+          break
+        }
+      }
+      if (!dominated) kept.push(group[i])
+    }
+  }
+  return kept
 }
 
 export function loadoutUsage(loadout: MemberLoadout): Map<string, number> {
@@ -408,8 +496,11 @@ export function improveBeneficiaryFit(
 }
 
 export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
-  const { party, items, weights, objective, chaptersEnabled, inventoryMode } =
-    input
+  const { party, items, weights, chaptersEnabled, inventoryMode, money } = input
+  // Money is additive across members for the search (party money = sum of
+  // per-member scores), so it always uses the sum objective regardless of
+  // what the caller passed.
+  const objective: PartyObjective = money ? "sum" : input.objective
 
   if (party.length === 0) {
     return { ok: false, reason: "No active party members selected." }
@@ -455,6 +546,12 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
     }
   }
 
+  // Enough distinct fillers that every member can always find an
+  // uncontested one for each slot: (members × max slots) can be needed at
+  // once, plus a margin. Below this cap the money search stays exact.
+  const maxArmor = Math.max(1, ...equippableParty.map((c) => c.slots.armor))
+  const moneyFillerCap = equippableParty.length * (maxArmor + 1) + 2
+
   const memberLoadouts = equippableParty.map((character) => ({
     character,
     loadouts: enumerateMemberLoadouts(
@@ -463,6 +560,8 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
       weights,
       chaptersEnabled,
       inventoryMode,
+      money,
+      moneyFillerCap,
     ),
   }))
 
@@ -538,6 +637,22 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
   const nameOf = (id: string) =>
     party.find((c) => c.id === id)?.name ?? id
 
+  // Money breakdown (money mode only) — computed before the notes so each
+  // equipped money item can say whether it actually counted.
+  const moneyBreakdown: MoneyBreakdown | undefined = money
+    ? computePartyMoney(
+        assignments.map<MoneyMember>((a) => ({
+          character: a.character,
+          equipped: [a.weapon, ...a.armor],
+        })),
+        money,
+      )
+    : undefined
+  const countedMoney = new Set(
+    moneyBreakdown?.contributions.map((c) => `${c.characterId}:${c.itemId}`) ??
+      [],
+  )
+
   const explained: MemberAssignment[] = assignments.map((a) => {
     const itemNotes: ItemNote[] = []
     for (const item of [a.weapon, ...a.armor]) {
@@ -557,6 +672,24 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
           itemId: item.id,
           text: `${ability} only benefits ${list.map(nameOf).join(", ")} — ${a.character.name} is holding it because no equal-scoring alternative was free.`,
         })
+      }
+    }
+
+    // Money notes: what each equipped money item contributes, and why.
+    if (money) {
+      for (const item of [a.weapon, ...a.armor]) {
+        const pct = moneyOf(item)
+        if (pct === 0) continue
+        const signed = pct > 0 ? `+${pct}%` : `${pct}%`
+        let text: string
+        if (pct < 0) {
+          text = `${item.name} is only equipped because ${a.character.name} had no other legal ${item.type}; it costs ${signed} Dark Dollars.`
+        } else if (countedMoney.has(`${a.character.id}:${item.id}`)) {
+          text = `${item.name} adds ${signed} Dark Dollars.`
+        } else {
+          text = `${item.name} gives ${signed}, but under "wearer-only" only ${a.character.name}'s single best money item counts, so it adds nothing here.`
+        }
+        itemNotes.push({ itemId: item.id, text })
       }
     }
 
@@ -597,5 +730,6 @@ export function optimizeParty(input: PartyOptimizeInput): PartyOptimizeResult {
     blocked,
     objectiveScore,
     leftovers,
+    money: moneyBreakdown,
   }
 }

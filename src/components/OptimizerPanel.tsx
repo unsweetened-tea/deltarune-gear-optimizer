@@ -3,7 +3,13 @@ import type { InventoryMode, Item, Stats } from "../types/data"
 import { useDataset } from "../hooks/useDataset"
 import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimize, type ScoredLoadout } from "../lib/optimizer"
+import { computePartyMoney, datasetHasMoneyGear } from "../lib/money"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
+import type { MoneySettings } from "../types/data"
+import {
+  MoneyBreakdownCard,
+  MoneySettingsControls,
+} from "./results/MoneyBreakdown"
 import { RecentlyUnavailable } from "./RecentlyUnavailable"
 import { SoulHeart } from "./SoulHeart"
 import { MarkUnavailableButton } from "./ui/DestructiveButtons"
@@ -31,6 +37,8 @@ function armorLabel(armor: Item[]): string {
   return armor.map((a) => a.name).join(" + ")
 }
 
+type Target = keyof Stats | "money"
+
 export function OptimizerPanel() {
   const { dataset, setDataset } = useDataset()
   const [characterId, setCharacterId] = useState(
@@ -38,24 +46,45 @@ export function OptimizerPanel() {
       dataset.characters[0]?.id ??
       "",
   )
-  const [targetStat, setTargetStat] = useState<keyof Stats>("atk")
+  const [target, setTarget] = useState<Target>("atk")
 
   const { recentlyUnavailable, markUnavailable, undoUnavailable } =
     useMarkUnavailable()
 
   const character = dataset.characters.find((c) => c.id === characterId)
-  const { chaptersEnabled, inventoryMode } = dataset.settings
+  const { chaptersEnabled, inventoryMode, moneySettings } = dataset.settings
+  const moneyMode = target === "money"
+  const hasMoneyGear = datasetHasMoneyGear(dataset.items)
+  /** A real stat for the stat-only UI bits; falls back to ATK in money mode. */
+  const statTarget: keyof Stats = moneyMode ? "atk" : target
 
   const result = useMemo(() => {
     if (!character) return null
     return optimize({
       character,
       items: dataset.items,
-      targetStat,
+      targetStat: statTarget,
       chaptersEnabled,
       inventoryMode,
+      money: moneyMode ? moneySettings : undefined,
     })
-  }, [character, dataset.items, targetStat, chaptersEnabled, inventoryMode])
+  }, [
+    character,
+    dataset.items,
+    statTarget,
+    chaptersEnabled,
+    inventoryMode,
+    moneyMode,
+    moneySettings,
+  ])
+
+  const loadoutMoney = (loadout: ScoredLoadout): number =>
+    character
+      ? computePartyMoney(
+          [{ character, equipped: [loadout.weapon, ...loadout.armor] }],
+          moneySettings,
+        ).totalPercent
+      : 0
 
   function toggleChapter(chapter: number) {
     setDataset((prev) => ({
@@ -76,8 +105,22 @@ export function OptimizerPanel() {
     }))
   }
 
+  function setMoneySettings(next: MoneySettings) {
+    setDataset((prev) => ({
+      ...prev,
+      settings: { ...prev.settings, moneySettings: next },
+    }))
+  }
+
   const top = result?.ok ? result.loadouts.slice(0, TOP_N) : []
   const best = top[0]
+  const bestMoney =
+    moneyMode && best && character
+      ? computePartyMoney(
+          [{ character, equipped: [best.weapon, ...best.armor] }],
+          moneySettings,
+        )
+      : null
 
   const selectClass =
     "rounded border border-border bg-void px-2 py-1 text-on-void"
@@ -104,8 +147,8 @@ export function OptimizerPanel() {
         <label className="flex items-center gap-2">
           <span className="text-text-muted">Maximize</span>
           <select
-            value={targetStat}
-            onChange={(e) => setTargetStat(e.target.value as keyof Stats)}
+            value={target}
+            onChange={(e) => setTarget(e.target.value as Target)}
             className={selectClass}
           >
             {STAT_KEYS.map((stat) => (
@@ -113,6 +156,9 @@ export function OptimizerPanel() {
                 {stat.toUpperCase()}
               </option>
             ))}
+            <option value="money" disabled={!hasMoneyGear}>
+              Money (D$)
+            </option>
           </select>
         </label>
 
@@ -143,6 +189,13 @@ export function OptimizerPanel() {
           </select>
         </label>
       </div>
+
+      {moneyMode && (
+        <MoneySettingsControls
+          settings={moneySettings}
+          onChange={setMoneySettings}
+        />
+      )}
 
       <RecentlyUnavailable
         entries={recentlyUnavailable}
@@ -176,9 +229,13 @@ export function OptimizerPanel() {
               <SoulHeart className="h-4 w-4 text-soul" />
               <h3 className="font-display text-h2 text-on-surface">
                 Best loadout for {character.name} — max{" "}
-                <span className={STAT_TEXT_CLASS[targetStat]}>
-                  {targetStat.toUpperCase()}
-                </span>
+                {moneyMode ? (
+                  <span className="text-success">Money (D$)</span>
+                ) : (
+                  <span className={STAT_TEXT_CLASS[statTarget]}>
+                    {statTarget.toUpperCase()}
+                  </span>
+                )}
               </h3>
             </div>
 
@@ -207,12 +264,20 @@ export function OptimizerPanel() {
               ))}
             </div>
 
-            <StatBlock totals={best.totals} highlight={targetStat} />
+            <StatBlock
+              totals={best.totals}
+              highlight={moneyMode ? undefined : statTarget}
+            />
             <p className="text-small text-text-muted">
-              Abilities are shown per item above — the optimizer never scores
-              them, so they&apos;re yours to weigh.
+              {moneyMode
+                ? "The four stats above are what this money build leaves you with — the cost of chasing Dark Dollars."
+                : "Abilities are shown per item above — the optimizer never scores them, so they’re yours to weigh."}
             </p>
           </Card>
+
+          {moneyMode && bestMoney && (
+            <MoneyBreakdownCard breakdown={bestMoney} />
+          )}
 
           <div>
             <h3 className="mb-2 font-display text-h2 text-on-void">
@@ -232,14 +297,14 @@ export function OptimizerPanel() {
                       <th
                         key={stat}
                         className={`p-2 text-left uppercase ${STAT_TEXT_CLASS[stat]} ${
-                          stat === targetStat ? "underline" : ""
+                          stat === statTarget && !moneyMode ? "underline" : ""
                         }`}
                       >
                         {stat}
                       </th>
                     ))}
                     <th className="p-2 text-left">
-                      Δ {targetStat.toUpperCase()}
+                      {moneyMode ? "D$ %" : `Δ ${statTarget.toUpperCase()}`}
                     </th>
                     <th className="p-2 text-left">Abilities</th>
                   </tr>
@@ -257,19 +322,26 @@ export function OptimizerPanel() {
                         <td
                           key={stat}
                           className={`p-2 font-mono ${STAT_TEXT_CLASS[stat]} ${
-                            stat === targetStat ? "font-bold" : ""
+                            stat === statTarget && !moneyMode ? "font-bold" : ""
                           }`}
                         >
                           {loadout.totals[stat]}
                         </td>
                       ))}
                       <td className="p-2">
-                        <Delta
-                          value={
-                            loadout.totals[targetStat] -
-                            best.totals[targetStat]
-                          }
-                        />
+                        {moneyMode ? (
+                          <span className="font-mono tabular-nums text-success">
+                            {loadoutMoney(loadout) > 0 ? "+" : ""}
+                            {loadoutMoney(loadout)}%
+                          </span>
+                        ) : (
+                          <Delta
+                            value={
+                              loadout.totals[statTarget] -
+                              best.totals[statTarget]
+                            }
+                          />
+                        )}
                       </td>
                       <td className="p-2">
                         {abilitiesOf(loadout)

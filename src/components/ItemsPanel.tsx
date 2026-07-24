@@ -261,6 +261,13 @@ export function ItemsPanel() {
                     {stat.toUpperCase()}
                   </th>
                 ))}
+                <th
+                  scope="col"
+                  className={numHeadCell}
+                  title="Percent change to Dark Dollars earned while equipped. Positive is a bonus, negative a penalty, blank/0 no effect."
+                >
+                  D$ %
+                </th>
                 <th scope="col" className={headCell}>
                   Equippable By
                 </th>
@@ -377,6 +384,22 @@ export function ItemsPanel() {
                       />
                     </td>
                   ))}
+                  <td className={cell}>
+                    <NumberInput
+                      value={item.moneyModifier ?? ""}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          moneyModifier:
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                        })
+                      }
+                      placeholder="0"
+                      aria-label={`${item.name} Dark Dollars percent`}
+                      className="w-16 text-right"
+                    />
+                  </td>
                   <td className={cell}>
                     <TextInput
                       key={`${item.id}-equip`}

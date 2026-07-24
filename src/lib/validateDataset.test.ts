@@ -125,6 +125,58 @@ describe("parseDataset migration", () => {
   })
 })
 
+describe("v5 migration: money", () => {
+  it("defaults money settings to additive + party-wide when absent", () => {
+    const result = parseDataset(v1Dataset)
+    expect(result?.settings.moneySettings).toEqual({
+      stackMode: "additive",
+      scope: "party-wide",
+    })
+  })
+
+  it("keeps money settings the user already chose", () => {
+    const moneySettings = { stackMode: "multiplicative", scope: "wearer-only" }
+    const result = parseDataset({
+      ...v1Dataset,
+      settings: { ...v1Dataset.settings, moneySettings },
+    })
+    expect(result?.settings.moneySettings).toEqual(moneySettings)
+  })
+
+  it("round-trips a moneyModifier through parse", () => {
+    const result = parseDataset({
+      ...v1Dataset,
+      items: [{ ...v1Dataset.items[0], moneyModifier: -90 }],
+    })
+    expect(result?.items[0].moneyModifier).toBe(-90)
+  })
+
+  it("rejects a non-numeric moneyModifier", () => {
+    expect(
+      parseDataset({
+        ...v1Dataset,
+        items: [{ ...v1Dataset.items[0], moneyModifier: "lots" }],
+      }),
+    ).toBeNull()
+  })
+
+  it("coerces a malformed money setting back to the default", () => {
+    // A minor preference: a garbage value is treated like an absent one
+    // (defaulted) rather than failing the whole dataset load.
+    const result = parseDataset({
+      ...v1Dataset,
+      settings: {
+        ...v1Dataset.settings,
+        moneySettings: { stackMode: "additive", scope: "everyone" },
+      },
+    })
+    expect(result?.settings.moneySettings).toEqual({
+      stackMode: "additive",
+      scope: "party-wide",
+    })
+  })
+})
+
 describe("v4 migration: stat weights and chapter gates", () => {
   it("gives pre-v4 characters a neutral weight of 1 for every stat", () => {
     const result = parseDataset(v1Dataset)

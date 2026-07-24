@@ -7,10 +7,12 @@ import type {
   Dataset,
   DatasetSettings,
   Item,
+  MoneySettings,
   Preset,
   Resistance,
   Stats,
 } from "../types/data"
+import { DEFAULT_MONEY_SETTINGS } from "./money"
 import { DATASET_VERSION, ensureBuiltinPresets } from "./presets"
 import { applySeedChapterGates } from "./seedChapterGates"
 
@@ -95,7 +97,9 @@ function isItem(value: unknown): value is Item {
       typeof value.excludeFromOptimizer === "boolean") &&
     (value.chapterGates === undefined ||
       (Array.isArray(value.chapterGates) &&
-        value.chapterGates.every(isChapterGate)))
+        value.chapterGates.every(isChapterGate))) &&
+    (value.moneyModifier === undefined ||
+      typeof value.moneyModifier === "number")
   )
 }
 
@@ -169,13 +173,29 @@ function isPreset(value: unknown): value is Preset {
   )
 }
 
+function isMoneySettings(value: unknown): value is MoneySettings {
+  return (
+    isRecord(value) &&
+    (value.stackMode === "additive" || value.stackMode === "multiplicative") &&
+    (value.scope === "wearer-only" || value.scope === "party-wide")
+  )
+}
+
 function isSettings(value: unknown): value is DatasetSettings {
   return (
     isRecord(value) &&
     Array.isArray(value.chaptersEnabled) &&
     value.chaptersEnabled.every((c: unknown) => typeof c === "number") &&
-    (value.inventoryMode === "owned" || value.inventoryMode === "unlimited")
+    (value.inventoryMode === "owned" || value.inventoryMode === "unlimited") &&
+    isMoneySettings(value.moneySettings)
   )
+}
+
+/** Pre-v5 settings have no money assumption; default to additive + party-wide. */
+function normalizeRawSettings(value: unknown): unknown {
+  if (!isRecord(value)) return value
+  if (isMoneySettings(value.moneySettings)) return value
+  return { ...value, moneySettings: { ...DEFAULT_MONEY_SETTINGS } }
 }
 
 /**
@@ -216,7 +236,8 @@ export function parseDataset(value: unknown): Dataset | null {
   const rawItems = value.items.map(normalizeRawItem)
   if (!rawItems.every(isItem)) return null
   const items = value.version < 4 ? applySeedChapterGates(rawItems) : rawItems
-  if (!isSettings(value.settings)) return null
+  const settings = normalizeRawSettings(value.settings)
+  if (!isSettings(settings)) return null
 
   let presets: Preset[]
   if (value.presets === undefined) {
@@ -245,6 +266,6 @@ export function parseDataset(value: unknown): Dataset | null {
     items,
     presets: ensureBuiltinPresets(presets),
     bosses,
-    settings: value.settings,
+    settings,
   }
 }

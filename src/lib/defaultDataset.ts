@@ -1,4 +1,5 @@
 import type { Character, Dataset } from "../types/data"
+import { DEFAULT_MONEY_SETTINGS } from "./money"
 import { builtinPresets, DATASET_VERSION } from "./presets"
 
 const zeroStats = { hp: 0, atk: 0, def: 0, magic: 0 }
@@ -59,6 +60,7 @@ export function createDefaultDataset(): Dataset {
     settings: {
       chaptersEnabled: [1, 2, 3, 4, 5],
       inventoryMode: "owned",
+      moneySettings: { ...DEFAULT_MONEY_SETTINGS },
     },
   }
 }

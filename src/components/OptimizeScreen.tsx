@@ -2,6 +2,7 @@ import { useState } from "react"
 import type {
   Character,
   InventoryMode,
+  MoneySettings,
   PresetCategory,
   PresetObjective,
   Stats,
@@ -9,6 +10,7 @@ import type {
 import { useDataset } from "../hooks/useDataset"
 import { useMarkUnavailable } from "../hooks/useMarkUnavailable"
 import { optimizeParty, type MemberAssignment } from "../lib/partyOptimizer"
+import { datasetHasMoneyGear, moneyOf } from "../lib/money"
 import { toPartyObjective } from "../lib/presets"
 import { STAT_TEXT_CLASS } from "../lib/statColors"
 import { BossPanel } from "./BossPanel"
@@ -20,8 +22,17 @@ import {
   RemoveButton,
 } from "./ui/DestructiveButtons"
 import { Card } from "./ui/Card"
+import { Delta } from "./ui/Delta"
+import {
+  MoneyBreakdownCard,
+  MoneySettingsControls,
+} from "./results/MoneyBreakdown"
 import { SlotRow } from "./results/SlotRow"
 import { StatBlock } from "./results/StatBlock"
+
+const ZERO_WEIGHTS: Stats = { hp: 0, atk: 0, def: 0, magic: 0 }
+/** Sentinel selection id for the money target inside the Stat category. */
+const MONEY_TARGET = "money"
 
 const STAT_KEYS = ["hp", "atk", "def", "magic"] as const
 
@@ -75,12 +86,17 @@ export function OptimizeScreen({
   const categoryPresets = dataset.presets.filter(
     (p) => p.category === category,
   )
-  const preset =
-    categoryPresets.find((p) => p.id === selectedByCategory[category]) ??
-    categoryPresets[0] ??
-    null
+  // Money is a Stat-tab target but not a preset; it is selected by sentinel.
+  const moneyMode =
+    category === "stat" && selectedByCategory.stat === MONEY_TARGET
+  const preset = moneyMode
+    ? null
+    : (categoryPresets.find((p) => p.id === selectedByCategory[category]) ??
+      categoryPresets[0] ??
+      null)
 
-  const { chaptersEnabled, inventoryMode } = dataset.settings
+  const { chaptersEnabled, inventoryMode, moneySettings } = dataset.settings
+  const hasMoneyGear = datasetHasMoneyGear(dataset.items)
   const activeParty = dataset.characters.filter((c) => c.active)
 
   // Apply build-local slot locks by shrinking armor capacity per member.
@@ -97,16 +113,51 @@ export function OptimizeScreen({
   // Auto-runs on every relevant change; the search space is tiny.
   // The boss tab has its own scoring (BossPanel) — skip the preset engine there.
   const result =
-    category !== "boss" && preset && party.length > 0
+    category === "boss" || party.length === 0
+      ? null
+      : moneyMode
+        ? optimizeParty({
+            party,
+            items: dataset.items,
+            weights: ZERO_WEIGHTS,
+            objective: "sum",
+            chaptersEnabled,
+            inventoryMode,
+            money: moneySettings,
+          })
+        : preset
+          ? optimizeParty({
+              party,
+              items: dataset.items,
+              weights: preset.weights,
+              objective: toPartyObjective(preset.objective),
+              chaptersEnabled,
+              inventoryMode,
+            })
+          : null
+
+  // For the money trade-off view: the Balanced recommendation to diff against.
+  const balancedPreset = dataset.presets.find(
+    (p) => p.id === "playstyle-balanced",
+  )
+  const balancedResult =
+    moneyMode && balancedPreset && party.length > 0
       ? optimizeParty({
           party,
           items: dataset.items,
-          weights: preset.weights,
-          objective: toPartyObjective(preset.objective),
+          weights: balancedPreset.weights,
+          objective: toPartyObjective(balancedPreset.objective),
           chaptersEnabled,
           inventoryMode,
         })
       : null
+  const balancedTotalsFor = (characterId: string): Stats | null => {
+    if (!balancedResult?.ok) return null
+    return (
+      balancedResult.assignments.find((a) => a.character.id === characterId)
+        ?.totals ?? null
+    )
+  }
 
   function selectCategory(next: PresetCategory) {
     setCategory(next)
@@ -159,6 +210,13 @@ export function OptimizeScreen({
     }))
   }
 
+  function setMoneySettings(next: MoneySettings) {
+    setDataset((prev) => ({
+      ...prev,
+      settings: { ...prev.settings, moneySettings: next },
+    }))
+  }
+
   const datasetCharacter = (id: string): Character | undefined =>
     dataset.characters.find((c) => c.id === id)
 
@@ -192,19 +250,44 @@ export function OptimizeScreen({
               onClick={() => selectPreset(p.id)}
               className={
                 "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-small font-medium " +
-                (preset?.id === p.id
+                (!moneyMode && preset?.id === p.id
                   ? "border-soul bg-soul text-on-soul"
                   : "border-border text-text-muted hover:border-soul hover:text-on-void")
               }
             >
-              {preset?.id === p.id && <SoulHeart className="h-2.5 w-2.5" />}
+              {!moneyMode && preset?.id === p.id && (
+                <SoulHeart className="h-2.5 w-2.5" />
+              )}
               {p.label}
             </button>
           ))}
+          {category === "stat" && (
+            <button
+              type="button"
+              onClick={() => selectPreset(MONEY_TARGET)}
+              disabled={!hasMoneyGear}
+              title={
+                hasMoneyGear
+                  ? undefined
+                  : "No gear in this dataset has a Dark Dollars modifier."
+              }
+              className={
+                "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-small font-medium " +
+                (moneyMode
+                  ? "border-soul bg-soul text-on-soul"
+                  : hasMoneyGear
+                    ? "border-border text-text-muted hover:border-soul hover:text-on-void"
+                    : "cursor-not-allowed border-dashed border-border text-text-muted")
+              }
+            >
+              {moneyMode && <SoulHeart className="h-2.5 w-2.5" />}
+              Money (D$)
+            </button>
+          )}
         </div>
       )}
 
-      {category !== "boss" && preset && (
+      {category !== "boss" && !moneyMode && preset && (
         <div className="rounded-card border border-border bg-surface p-3 text-small text-on-surface">
           <span className="font-display text-h2">{preset.label}</span>
           <span className="ml-3">
@@ -216,6 +299,20 @@ export function OptimizeScreen({
           {preset.notes && (
             <p className="mt-1 text-small text-text-muted">{preset.notes}</p>
           )}
+        </div>
+      )}
+
+      {moneyMode && (
+        <div className="space-y-3 rounded-card border border-border bg-surface p-3">
+          <p className="text-small text-on-surface">
+            <span className="font-display text-h2">Money (D$)</span> — maximizes
+            Dark Dollars earned across the shared inventory. Combat stats are
+            ignored, so check the trade-off shown on each character.
+          </p>
+          <MoneySettingsControls
+            settings={moneySettings}
+            onChange={setMoneySettings}
+          />
         </div>
       )}
 
@@ -294,7 +391,7 @@ export function OptimizeScreen({
           No active party members — tick at least one character in the{" "}
           <span className="font-medium text-on-surface">Party</span> row above.
         </p>
-      ) : !preset ? (
+      ) : !moneyMode && !preset ? (
         <p className="rounded-card border border-border bg-surface p-6 text-center text-small text-text-muted">
           Select a preset above to see results.
         </p>
@@ -349,7 +446,7 @@ export function OptimizeScreen({
                   <div className="flex items-baseline justify-between">
                     <h3 className="font-display text-h2">{a.character.name}</h3>
                     <span className="text-small text-text-muted">
-                      weighted score{" "}
+                      {moneyMode ? "money score" : "weighted score"}{" "}
                       <span className="font-mono text-mono">{a.score}</span>
                     </span>
                   </div>
@@ -413,6 +510,34 @@ export function OptimizeScreen({
                   )}
 
                   <StatBlock totals={a.totals} />
+
+                  {moneyMode &&
+                    (() => {
+                      const base = balancedTotalsFor(a.character.id)
+                      if (!base) return null
+                      return (
+                        <div>
+                          <div className="mb-1 text-small text-text-muted">
+                            vs Balanced build
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {STAT_KEYS.map((stat) => (
+                              <div
+                                key={stat}
+                                className="rounded bg-surface-2 px-2 py-1 text-center"
+                              >
+                                <div
+                                  className={`text-small font-medium uppercase ${STAT_TEXT_CLASS[stat]}`}
+                                >
+                                  {stat}
+                                </div>
+                                <Delta value={a.totals[stat] - base[stat]} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
                 </Card>
               )
             })}
@@ -432,7 +557,30 @@ export function OptimizeScreen({
             ))}
           </div>
 
-          {result.assignments.length > 0 && (
+          {moneyMode && result.money && (
+            <>
+              <MoneyBreakdownCard breakdown={result.money} />
+              {(() => {
+                const passedOver = result.leftovers.filter(
+                  ({ item }) => moneyOf(item) > 0,
+                )
+                if (passedOver.length === 0) return null
+                return (
+                  <p className="text-small text-text-muted">
+                    <span className="font-medium text-on-void">
+                      Money gear left unused:
+                    </span>{" "}
+                    {passedOver
+                      .map(({ item }) => `${item.name} (+${moneyOf(item)}%)`)
+                      .join(", ")}{" "}
+                    — passed over because no free, legal slot remained for it.
+                  </p>
+                )
+              })()}
+            </>
+          )}
+
+          {result.assignments.length > 0 && !moneyMode && preset && (
             <Card className="text-small">
               <span className="text-text-muted">
                 Objective {objectiveLabel(preset.objective)} ·{" "}
